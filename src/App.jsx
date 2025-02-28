@@ -4,7 +4,13 @@ import LobbyControls from "./components/LobbyControls";
 import RoomList from "./components/RoomList";
 import GameRoom from "./components/GameRoom";
 
-const socket = io("http://localhost:3000");
+const socket = io(
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://api.big2.prestontang.dev",
+  { withCredentials: true }
+);
+
 
 function App() {
   const [players, setPlayers] = useState([]);
@@ -67,12 +73,12 @@ function App() {
 
   function joinRoom(formData) {
     if (!formData.roomName.trim()) return alert("Room name cannot be empty!");
-  
+
     setLobbyControlsData(prev => ({ ...prev, roomName: formData.roomName }));
     setInRoom(true);
-  
+
     sessionStorage.setItem("roomName", formData.roomName);
-  
+
     socket.emit("joinRoom", { roomName: formData.roomName, playerName: formData.username });
   }
 
