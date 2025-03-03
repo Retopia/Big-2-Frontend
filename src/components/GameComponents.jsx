@@ -139,10 +139,10 @@ function GameDisplay({ gameState, socket }) {
       default: value = parseInt(card.value); break;
     }
 
-    // Add suit weight (Club < Diamond < Heart < Spade)
+    // Add suit weight (Diamond < Club < Heart < Spade)
     switch (card.suit) {
-      case '♣': value += 0.1; break;
-      case '♦': value += 0.2; break;
+      case '♦': value += 0.1; break;
+      case '♣': value += 0.2; break;
       case '♥': value += 0.3; break;
       case '♠': value += 0.4; break;
     }
