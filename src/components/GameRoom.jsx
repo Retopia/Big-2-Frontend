@@ -106,7 +106,7 @@ function GameRoom({
   onRemovePlayer,
   gameState,
   socket,
-  roomName
+  roomName,
 }) {
   useEffect(() => {
     if (roomName) {

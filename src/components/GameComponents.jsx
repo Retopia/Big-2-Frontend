@@ -93,7 +93,7 @@ function OpponentHand({ playerName, cardCount, isActive }) {
 }
 
 // Table represents the play area where cards are placed
-function Table({ playedCards, currentTurn }) {
+function Table({ lastPlayedHand, currentTurn }) {
   const username = sessionStorage.getItem("username");
   const isYourTurn = currentTurn === username;
 
@@ -107,11 +107,11 @@ function Table({ playedCards, currentTurn }) {
       </div>
 
       <div className="min-h-32 flex justify-center items-center p-3 bg-gray-700 rounded-lg">
-        {playedCards.length === 0 ? (
+        {lastPlayedHand.length === 0 ? (
           <p className="text-gray-400 italic">No cards played yet</p>
         ) : (
           <div className="flex flex-wrap justify-center">
-            {playedCards.map((card, index) => (
+            {lastPlayedHand.map((card, index) => (
               <Card key={index} suit={card.suit} value={card.value} />
             ))}
           </div>
@@ -211,7 +211,7 @@ function GameDisplay({ gameState, socket }) {
   const isMyTurn = gameState.currentPlayer === username;
 
   // Can only pass if it's not the first play (there are cards on the table)
-  const canPass = isMyTurn && gameState.playedCards && gameState.playedCards.length > 0;
+  const canPass = isMyTurn && gameState.lastPlayedHand && gameState.lastPlayedHand.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -249,7 +249,7 @@ function GameDisplay({ gameState, socket }) {
       </div>
 
       <Table
-        playedCards={gameState.playedCards || []}
+        lastPlayedHand={gameState.lastPlayedHand || []}
         currentTurn={gameState.currentPlayer || ""}
       />
 
