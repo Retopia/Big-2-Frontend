@@ -67,8 +67,8 @@ function OpponentHand({ playerName, cardCount, isActive }) {
           </h3>
         </div>
         
-        {/* Card visualization in middle */}
-        <div className="flex-1 mx-3 flex items-center justify-center">
+        {/* Card visualization in middle - hidden on mobile */}
+        <div className="flex-1 mx-3 items-center justify-center hidden md:flex">
           {cardCount > 0 && (
             <div className="relative h-4 flex">
               {/* Generate small visual indicators for cards */}
@@ -83,7 +83,7 @@ function OpponentHand({ playerName, cardCount, isActive }) {
         </div>
         
         {/* Card count on right */}
-        <div className="bg-gray-900 px-2.5 py-1 rounded-lg flex items-center text-sm">
+        <div className="bg-gray-900 px-2.5 py-1 rounded-lg flex items-center text-sm ml-auto">
           <span className="text-gray-300 font-medium">{cardCount}</span>
           <span className="ml-1 text-gray-400">cards</span>
         </div>
@@ -228,8 +228,8 @@ function GameDisplay({ gameState, socket }) {
               <span className={`absolute h-5 w-10 rounded-full bg-blue-600 transform transition-transform duration-200 ${sortBySuit ? 'translate-x-9' : 'translate-x-0'}`}></span>
             </div>
           </div>
-          <div className="bg-gray-800 px-4 py-1.5 rounded-full">
-            <p className="font-medium text-sm">Round: <span className="text-blue-400">{gameState.round || 1}</span></p>
+          <div className="bg-gray-800 px-4 py-1.5 rounded-full flex justify-center items-center">
+            <p className="font-medium text-sm text-center">Round: <span className="text-blue-400">{gameState.round || 1}</span></p>
           </div>
         </div>
       </div>
