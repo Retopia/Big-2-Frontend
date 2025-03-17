@@ -3,9 +3,10 @@ import { io } from "socket.io-client";
 import LobbyControls from "./components/LobbyControls";
 import RoomList from "./components/RoomList";
 import GameRoom from "./components/GameRoom";
-import GameRules from "./components/GameRules";
+import GameRules, { faqItems } from "./components/GameRules";
 import { ToastContainer } from "./components/ToastContainer";
 import { useToast } from "./hooks/useToast";
+import { JsonLd } from './components/JsonLd';
 
 const socket = io(
   window.location.hostname === "localhost"
@@ -31,9 +32,15 @@ function App() {
     players: [],
     round: 1
   });
-  
+
   // Initialize toast hook
   const { toasts, addToast, removeToast } = useToast();
+
+  useEffect(() => {
+    document.title = inRoom
+      ? `Playing in ${lobbyControlsData.roomName} | Big 2 Live`
+      : 'Play Big 2 Card Game Online | Big 2 Live';
+  }, [inRoom, lobbyControlsData.roomName]);
 
   useEffect(() => {
     socket.on("assignUsername", (data) => {
@@ -52,22 +59,22 @@ function App() {
     });
 
     socket.on("roomList", (data) => setRooms(data.rooms || []));
-    
+
     socket.on("gameStarted", () => {
       setGameStarted(true);
       addToast("Game has started! Good luck!", "success");
     });
-    
+
     socket.on("gameError", (error) => {
       addToast(error.message, "error");
     });
-    
+
     socket.on("joinError", (error) => {
       addToast(error.message, "error");
     });
-    
+
     socket.on("gameStateUpdate", (gameState) => setGameState(gameState));
-    
+
     socket.on("gameEnded", (result) => {
       addToast(`Game over! Winner: ${result.winner}`, "success", 5000);
       setGameStarted(false);
@@ -130,9 +137,39 @@ function App() {
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Big 2 Live",
+          "applicationCategory": "GameApplication",
+          "operatingSystem": "Web Browser",
+          "description": "Play Big 2 (Pusoy Dos, Chinese Poker) online for free with friends or AI opponents.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }}
+      />
+
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": faqItems.map(item => ({
+            "@type": "Question",
+            "name": item.question,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": item.answer
+            }
+          }))
+        }}
+      />
       {/* Toast Container - will display all notifications */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-      
+
       {inRoom ? (
         <GameRoom
           players={players}
@@ -154,33 +191,33 @@ function App() {
               <p className="text-center text-gray-400 mt-2">The classic card game online</p>
             </div>
           </header>
-          
+
           <main className="container mx-auto px-4 py-8">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-                <LobbyControls 
-                  onRoomJoin={joinRoom} 
-                  formData={lobbyControlsData} 
+                <LobbyControls
+                  onRoomJoin={joinRoom}
+                  formData={lobbyControlsData}
                   setFormData={setLobbyControlsData}
                   rooms={rooms}
                 />
-                
+
                 <div className="mt-8">
                   <h2 className="text-xl font-semibold mb-4 text-blue-400">Available Rooms</h2>
-                  <RoomList 
-                    rooms={rooms} 
-                    onRoomJoin={joinRoom} 
-                    formData={lobbyControlsData} 
+                  <RoomList
+                    rooms={rooms}
+                    onRoomJoin={joinRoom}
+                    formData={lobbyControlsData}
                   />
                 </div>
               </div>
-              
+
               <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
                 <GameRules />
               </div>
             </div>
           </main>
-          
+
           <footer className="bg-gray-800 py-4 mt-12 text-center text-gray-400">
             <p>&copy; 2025 Big 2 Live | Created with ♥</p>
           </footer>
