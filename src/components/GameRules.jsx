@@ -1,141 +1,214 @@
-import React from 'react';
+import { useState } from "react";
+import BackButton from "./BackButton";
 
-// Expanded FAQ items for better SEO
-export const faqItems = [
-  {
-    question: "What if I can't beat the last combination played?",
-    answer: "You must pass your turn. If all players pass, the last player who played a combination starts a new round."
-  },
-  {
-    question: "Can I play any combination on my turn?",
-    answer: "You must follow the combination type that was played. If singles were played, you must play singles. If pairs were played, you must play pairs, etc."
-  },
-  {
-    question: "What if I'm the first to play in a round?",
-    answer: "You can play any valid combination you want, and the next players must follow that combination type."
-  },
-  {
-    question: "What is the ranking of cards in Big 2?",
-    answer: "Cards are ranked from lowest to highest as follows: 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A, 2. This differs from many other card games where Ace is the highest card."
-  },
-  {
-    question: "Do suits matter in Big 2?",
-    answer: "Yes, suits matter when comparing cards of the same rank. The suit order from lowest to highest is: Diamonds (♦), Clubs (♣), Hearts (♥), Spades (♠)."
-  },
-  {
-    question: "How many cards does each player receive?",
-    answer: "In a standard 4-player game, each player receives 13 cards (the deck is divided equally among all players)."
-  }
-];
-
-function GameRules() {
-  // Card combination definitions
-  const combinations = [
-    { name: "Singles", description: "Play one card. Higher ranks beat lower ranks." },
-    { name: "Pairs", description: "Two cards of the same rank." },
-    { name: "Three of a Kind", description: "Three cards of the same rank." },
-    { name: "Straight", description: "Five cards in sequence (suits don't matter)." },
-    { name: "Flush", description: "Five cards of the same suit." },
-    { name: "Full House", description: "Three of a kind plus a pair." },
-    { name: "Four of a Kind", description: "Four cards of the same rank plus any card." },
-    { name: "Straight Flush", description: "Five cards in sequence of the same suit." }
-  ];
-
-  // Add more detailed strategy section for additional keyword-rich content
-  const strategies = [
-    {
-      title: "Control the Game with 2s",
-      description: "The four 2s are the highest single cards. Try to save them for when you need to take control of a round."
-    },
-    {
-      title: "Save Strong Combinations",
-      description: "If you have powerful combinations like straight flushes or four of a kind, save them until you can play them without being beaten."
-    },
-    {
-      title: "Watch Your Opponents",
-      description: "Keep track of what cards have been played to predict what your opponents might have left."
-    },
-    {
-      title: "Break Up Weak Combinations",
-      description: "Sometimes it's better to break up a weak flush or straight to retain control with singles or pairs."
-    }
-  ];
+const GameRules = () => {
+  const [activeSection, setActiveSection] = useState('basic');
 
   return (
-    <>
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-blue-400" id="game-rules">How to Play Big 2</h2>
+    <div className="py-6 sm:py-12 px-1.5 sm:px-0">
+      <div className="max-w-4xl mx-auto bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg">
+        <div className="mb-6">
+          {/* Small screens: stacked */}
+          <div className="flex flex-col items-start sm:hidden space-y-2">
+            <BackButton to="/" label="Back" />
+            <h2 className="text-2xl font-semibold text-blue-400">How to Play Big 2</h2>
+          </div>
 
-        <div>
-          <p className="mb-2">Big 2 (also known as Deuces, Pusoy Dos, or Chinese Poker) is a popular card game where the objective is to be the first to get rid of all your cards.</p>
-          <p>Originating in China and gaining popularity across Asia and worldwide, Big 2 combines elements of strategy, memory, and careful planning.</p>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-medium text-blue-300 mb-2" id="basic-rules">Basic Rules</h3>
-          <ul className="list-disc pl-5 space-y-2 text-gray-300">
-            <li>The game is typically played with 4 players using a standard 52-card deck.</li>
-            <li>Card rankings (from low to high): 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A, 2.</li>
-            <li>Suit rankings (from low to high): ♦ Diamonds, ♣ Clubs, ♥ Hearts, ♠ Spades.</li>
-            <li>Player with the 3 of Diamonds starts the first round.</li>
-            <li>Players must play a higher-ranked combination than the previous player or pass.</li>
-            <li>When all other players pass, the last player who played starts a new round.</li>
-            <li>The first player to get rid of all their cards wins!</li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-medium text-blue-300 mb-2" id="card-combinations">Card Combinations</h3>
-          <p className="mb-3 text-gray-300">Big 2 allows various card combinations, each with specific ranking rules:</p>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {combinations.map((combo, index) => (
-              <div key={index} className="bg-gray-700 p-3 rounded text-center hover:bg-gray-650">
-                <h4 className="font-medium text-blue-300 mb-1">{combo.name}</h4>
-                <p className="text-sm text-gray-300">{combo.description}</p>
-              </div>
-            ))}
+          {/* Medium+ screens: overlay */}
+          <div className="relative h-10 hidden sm:block">
+            <div className="absolute left-0 top-0">
+              <BackButton to="/" label="Back" />
+            </div>
+            <h2 className="text-2xl font-semibold text-blue-400 pb-2 text-center absolute inset-0 flex items-center justify-center pointer-events-none">
+              How to Play Big 2
+            </h2>
           </div>
         </div>
 
-        {/* New Strategy Section for SEO-rich content */}
-        <div>
-          <h3 className="text-lg font-medium text-blue-300 mb-2" id="strategy-tips">Strategy Tips</h3>
-          <p className="mb-3 text-gray-300">Improve your Big 2 game with these proven strategies:</p>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {strategies.map((strategy, index) => (
-              <div key={index} className="bg-gray-700 p-3 rounded hover:bg-gray-650">
-                <h4 className="font-medium text-yellow-400 mb-1">{strategy.title}</h4>
-                <p className="text-sm text-gray-300">{strategy.description}</p>
-              </div>
-            ))}
-          </div>
+        {/* Mobile View: Dropdown */}
+        <div className="sm:hidden mb-4">
+          <label htmlFor="section" className="text-sm text-gray-400 mb-1 block">Select a section:</label>
+          <select
+            id="section"
+            value={activeSection}
+            onChange={(e) => setActiveSection(e.target.value)}
+            className="w-full bg-gray-700 text-white rounded p-2"
+          >
+            <option value="basic">Basic Rules</option>
+            <option value="combinations">Card Combinations</option>
+            <option value="strategy">Strategy</option>
+            <option value="faq">FAQ</option>
+          </select>
         </div>
 
-        <div>
-          <h3 className="text-lg font-medium text-blue-300 mb-2" id="frequently-asked-questions">Frequently Asked Questions</h3>
-          <div className="space-y-3">
-            {faqItems.map((item, index) => (
-              <div key={index} className="bg-gray-700 p-3 rounded">
-                <p className="font-medium text-yellow-400 mb-1">{item.question}</p>
-                <p className="text-sm text-gray-300">{item.answer}</p>
-              </div>
-            ))}
-          </div>
+        <div className="hidden sm:flex border-b border-gray-700 mb-6">
+          <button
+            className={`py-2 px-4 ${activeSection === 'basic' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}
+            onClick={() => setActiveSection('basic')}
+          >
+            Basic Rules
+          </button>
+          <button
+            className={`py-2 px-4 ${activeSection === 'combinations' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}
+            onClick={() => setActiveSection('combinations')}
+          >
+            Card Combinations
+          </button>
+          <button
+            className={`py-2 px-4 ${activeSection === 'strategy' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}
+            onClick={() => setActiveSection('strategy')}
+          >
+            Strategy
+          </button>
+          <button
+            className={`py-2 px-4 ${activeSection === 'faq' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400'}`}
+            onClick={() => setActiveSection('faq')}
+          >
+            FAQ
+          </button>
         </div>
 
-        {/* Additional History Section for More Keywords */}
-        <div>
-          <h3 className="text-lg font-medium text-blue-300 mb-2" id="game-history">History of Big 2</h3>
-          <p className="text-gray-300">
-            Big 2 originated in China and has spread across Asia and beyond. Known as "Choh Dai Di" in Cantonese,
-            "Deuces" in some English-speaking regions, and "Pusoy Dos" in the Philippines, this game has evolved
-            with slightly different rules across cultures. The name "Big 2" comes from the fact that the 2 cards
-            are the highest-ranking singles in the game, unlike most card games where Ace is highest.
-          </p>
-        </div>
+        {activeSection === 'basic' && (
+          <div>
+            <p className="mb-4">Big 2 (also known as Deuces, Pusoy Dos, or Chinese Poker) is a popular card game where the objective is to be the first to get rid of all your cards.</p>
+
+            <h3 className="text-lg font-medium text-blue-300 mb-2">Basic Rules</h3>
+            <ul className="list-disc pl-5 space-y-2 text-gray-300 mb-4">
+              <li>The game is typically played with 4 players using a standard 52-card deck.</li>
+              <li>Card rankings (from low to high): 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A, 2.</li>
+              <li>Suit rankings (from low to high): ♦ Diamonds, ♣ Clubs, ♥ Hearts, ♠ Spades.</li>
+              <li>Player with the 3 of Diamonds starts the first round.</li>
+              <li>Players must play a higher-ranked combination than the previous player or pass.</li>
+              <li>When all other players pass, the last player who played starts a new round.</li>
+              <li>The first player to get rid of all their cards wins!</li>
+            </ul>
+
+            <div className="mt-6 p-4 bg-blue-900 bg-opacity-30 rounded-lg">
+              <h4 className="font-medium text-blue-300 mb-2">Quick Start Guide</h4>
+              <ol className="list-decimal pl-5 space-y-1 text-gray-300">
+                <li>Create a room or join an existing one</li>
+                <li>Wait for other players or add AI opponents</li>
+                <li>When it's your turn, select valid cards and click "Play"</li>
+                <li>Try to be the first to play all your cards!</li>
+              </ol>
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'combinations' && (
+          <div>
+            <p className="mb-4">Big 2 allows various card combinations, each with specific ranking rules:</p>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Singles</h4>
+                <p className="text-gray-300">A single card. Higher ranks beat lower ranks.</p>
+                <p className="text-sm text-gray-400 mt-2">Example: 2♠ beats A♥, which beats K♦</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Pairs</h4>
+                <p className="text-gray-300">Two cards of the same rank.</p>
+                <p className="text-sm text-gray-400 mt-2">Example: 8♠8♥ beats 7♠7♥</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Three of a Kind</h4>
+                <p className="text-gray-300">Three cards of the same rank.</p>
+                <p className="text-sm text-gray-400 mt-2">Example: Q♠Q♥Q♦ beats J♠J♥J♦</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Straight</h4>
+                <p className="text-gray-300">Five cards in sequence (suits don't matter).</p>
+                <p className="text-sm text-gray-400 mt-2">Example: 3-4-5-6-7 (compared by highest card)</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Flush</h4>
+                <p className="text-gray-300">Five cards of the same suit.</p>
+                <p className="text-sm text-gray-400 mt-2">Example: 3♠7♠9♠J♠K♠ (compared by highest card)</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Full House</h4>
+                <p className="text-gray-300">Three of a kind plus a pair.</p>
+                <p className="text-sm text-gray-400 mt-2">Example: K-K-K-5-5 beats Q-Q-Q-A-A</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Four of a Kind</h4>
+                <p className="text-gray-300">Four cards of the same rank plus any card.</p>
+                <p className="text-sm text-gray-400 mt-2">Example: 9-9-9-9-3 beats 8-8-8-8-A</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-blue-300 mb-2">Straight Flush</h4>
+                <p className="text-gray-300">Five cards in sequence of the same suit.</p>
+                <p className="text-sm text-gray-400 mt-2">Example: 4♥5♥6♥7♥8♥ beats 3♠4♠5♠6♠7♠</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'strategy' && (
+          <div>
+            <p className="mb-4">Improve your Big 2 game with these proven strategies:</p>
+
+            <div className="space-y-4">
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-yellow-400 mb-2">Control the Game with 2s</h4>
+                <p className="text-gray-300">The four 2s are the highest single cards. Try to save them for when you need to take control of a round.</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-yellow-400 mb-2">Save Strong Combinations</h4>
+                <p className="text-gray-300">If you have powerful combinations like straight flushes or four of a kind, save them until you can play them without being beaten.</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-yellow-400 mb-2">Watch Your Opponents</h4>
+                <p className="text-gray-300">Keep track of what cards have been played to predict what your opponents might have left.</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <h4 className="font-medium text-yellow-400 mb-2">Break Up Weak Combinations</h4>
+                <p className="text-gray-300">Sometimes it's better to break up a weak flush or straight to retain control with singles or pairs.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'faq' && (
+          <div>
+            <p className="mb-4">Common questions about Big 2:</p>
+
+            <div className="space-y-4">
+              <div className="bg-gray-700 p-4 rounded">
+                <p className="font-medium text-yellow-400 mb-1">What if I can't beat the last combination played?</p>
+                <p className="text-gray-300">You must pass your turn. If all players pass, the last player who played a combination starts a new round.</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <p className="font-medium text-yellow-400 mb-1">Can I play any combination on my turn?</p>
+                <p className="text-gray-300">You must follow the combination type that was played. If singles were played, you must play singles. If pairs were played, you must play pairs, etc.</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <p className="font-medium text-yellow-400 mb-1">What if I'm the first to play in a round?</p>
+                <p className="text-gray-300">You can play any valid combination you want, and the next players must follow that combination type.</p>
+              </div>
+
+              <div className="bg-gray-700 p-4 rounded">
+                <p className="font-medium text-yellow-400 mb-1">What is the ranking of cards in Big 2?</p>
+                <p className="text-gray-300">Cards are ranked from lowest to highest as follows: 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A, 2. This differs from many other card games where Ace is the highest card.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
-}
+};
 
 export default GameRules;

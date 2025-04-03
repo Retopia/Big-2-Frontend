@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import LobbyControls from "./components/LobbyControls";
-import RoomList from "./components/RoomList";
-import GameRoom from "./components/GameRoom";
-import GameRules, { faqItems } from "./components/GameRules";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { ToastContainer } from "./components/ToastContainer";
 import { useToast } from "./hooks/useToast";
 import { JsonLd } from './components/JsonLd';
 
+// Create the socket connection
 const socket = io(
   window.location.hostname === "localhost"
     ? "http://localhost:3002"
@@ -16,6 +14,8 @@ const socket = io(
 );
 
 function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [players, setPlayers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [inRoom, setInRoom] = useState(false);
@@ -35,6 +35,17 @@ function App() {
 
   // Initialize toast hook
   const { toasts, addToast, removeToast } = useToast();
+
+  // Check if we're in a room based on the URL
+  useEffect(() => {
+    const isInRoom = location.pathname.startsWith('/room/');
+    setInRoom(isInRoom);
+
+    if (isInRoom) {
+      const roomName = location.pathname.split('/').pop();
+      setLobbyControlsData(prev => ({ ...prev, roomName }));
+    }
+  }, [location]);
 
   useEffect(() => {
     document.title = inRoom
@@ -56,13 +67,13 @@ function App() {
     socket.on("forceLeave", () => {
       addToast("You have been removed from the room.", "error");
       setInRoom(false);
+      navigate('/');
     });
 
     socket.on("roomList", (data) => setRooms(data.rooms || []));
 
     socket.on("gameStarted", () => {
       setGameStarted(true);
-      addToast("Game has started! Good luck!", "success");
     });
 
     socket.on("gameError", (error) => {
@@ -71,6 +82,7 @@ function App() {
 
     socket.on("joinError", (error) => {
       addToast(error.message, "error");
+      navigate('/play/multiplayer');
     });
 
     socket.on("gameStateUpdate", (gameState) => setGameState(gameState));
@@ -93,14 +105,14 @@ function App() {
       socket.off("gameStateUpdate");
       socket.off("gameEnded");
     };
-  }, [addToast]);
+  }, [addToast, navigate]);
 
   function joinRoom(formData) {
-    if (!formData.roomName.trim()) {
+    if (!formData.roomName?.trim()) {
       addToast("Room name cannot be empty!", "warning");
       return;
     }
-    if (!formData.username.trim()) {
+    if (!formData.username?.trim()) {
       addToast("Username cannot be empty!", "warning");
       return;
     }
@@ -112,13 +124,15 @@ function App() {
     sessionStorage.setItem("username", formData.username);
 
     socket.emit("joinRoom", { roomName: formData.roomName, playerName: formData.username });
-    // addToast(`Joining room: ${formData.roomName}`, "info");
+
+    // Navigate to the room
+    navigate(`/room/${formData.roomName}`);
   }
 
   function leaveRoom() {
     setInRoom(false);
     socket.emit("leaveRoom");
-    // addToast("You have left the room", "info");
+    navigate('/');
   }
 
   function startGame() {
@@ -127,13 +141,70 @@ function App() {
 
   function addAI() {
     socket.emit("addAI", { roomName: lobbyControlsData.roomName });
-    // addToast("AI player added to the game", "info");
   }
 
   function removePlayer(playerName) {
     socket.emit("removePlayer", { roomName: lobbyControlsData.roomName, playerName });
     addToast(`Player ${playerName} has been removed`, "warning");
   }
+
+  function startAIGame(formData) {
+    // Create a special AI room
+    const roomName = `AI-Game-${Math.floor(Math.random() * 10000)}`;
+    const username = formData.username;
+    const aiCount = formData.aiCount || 3;
+    const difficulty = formData.difficulty || "medium";
+
+    if (!username?.trim()) {
+      addToast("Username cannot be empty!", "warning");
+      return;
+    }
+
+    setLobbyControlsData({ username, roomName });
+    setInRoom(true);
+
+    sessionStorage.setItem("roomName", roomName);
+    sessionStorage.setItem("username", username);
+
+    // Join the AI room
+    socket.emit("joinRoom", { roomName, playerName: username });
+
+    // Navigate to the room
+    navigate(`/room/${roomName}`);
+
+    // Add AI players based on count
+    setTimeout(() => {
+      for (let i = 0; i < aiCount; i++) {
+        socket.emit("addAI", { roomName, difficulty });
+      }
+
+      // Automatically start the game after a short delay
+      setTimeout(() => {
+        socket.emit("startGame", { roomName });
+      }, 1000);
+    }, 500);
+  }
+
+  // Make app state available to child components
+  const appState = {
+    socket,
+    players,
+    rooms,
+    inRoom,
+    gameStarted,
+    creatorID,
+    lobbyControlsData,
+    gameState,
+    isCreator: socket.id === creatorID,
+    setLobbyControlsData,
+    joinRoom,
+    leaveRoom,
+    startGame,
+    addAI,
+    removePlayer,
+    startAIGame,
+    addToast
+  };
 
   return (
     <>
@@ -153,76 +224,24 @@ function App() {
         }}
       />
 
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": faqItems.map(item => ({
-            "@type": "Question",
-            "name": item.question,
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": item.answer
-            }
-          }))
-        }}
-      />
       {/* Toast Container - will display all notifications */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
-      {inRoom ? (
-        <GameRoom
-          players={players}
-          gameStarted={gameStarted}
-          isCreator={socket.id === creatorID}
-          onGameStart={startGame}
-          onRoomLeave={leaveRoom}
-          onAddAI={addAI}
-          onRemovePlayer={removePlayer}
-          gameState={gameState}
-          socket={socket}
-          roomName={lobbyControlsData.roomName}
-        />
-      ) : (
-        <div className="min-h-screen bg-gray-900 text-white">
-          <header className="bg-gray-800 py-6 px-4 shadow-md">
-            <div className="container mx-auto">
-              <h1 className="text-4xl font-bold text-center text-blue-400">Big 2 Live</h1>
-              <p className="text-center text-gray-400 mt-2">The classic card game online</p>
-            </div>
-          </header>
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+        <main className={"container mx-auto px-4 flex-grow flex items-center justify-center"}>
+          <div className={'w-full'}>
+            {/* This is where child routes will be rendered */}
+            <Outlet context={appState} />
+          </div>
+        </main>
 
-          <main className="container mx-auto px-4 py-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-                <LobbyControls
-                  onRoomJoin={joinRoom}
-                  formData={lobbyControlsData}
-                  setFormData={setLobbyControlsData}
-                  rooms={rooms}
-                />
-
-                <div className="mt-8">
-                  <h2 className="text-xl font-semibold mb-4 text-blue-400">Available Rooms</h2>
-                  <RoomList
-                    rooms={rooms}
-                    onRoomJoin={joinRoom}
-                    formData={lobbyControlsData}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-                <GameRules />
-              </div>
-            </div>
-          </main>
-
-          <footer className="bg-gray-800 py-4 mt-12 text-center text-gray-400">
-            <p>&copy; 2025 Big 2 Live | Created with ♥</p>
+        {/* Footer will stay at bottom due to flex layout */}
+        {location.pathname === '/' && !inRoom && (
+          <footer className="bg-gray-800 py-4 text-center text-gray-400 mt-auto">
+            <p>&copy; 2025 Big 2 Live | Created by Retopia</p>
           </footer>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useParams, useOutletContext } from "react-router";
 import { GameDisplay } from "./GameComponents";
 
 function PreStartDisplay({ players, isCreator, onGameStart, onRoomLeave, onAddAI, onRemovePlayer }) {
@@ -96,18 +97,23 @@ function PlayerList({ players, isCreator, onRemovePlayer }) {
   );
 }
 
-function GameRoom({ 
-  players, 
-  gameStarted, 
-  isCreator, 
-  onGameStart, 
-  onRoomLeave, 
-  onAddAI, 
-  onRemovePlayer,
-  gameState,
-  socket,
-  roomName,
-}) {
+function GameRoom() {
+  // Get roomName from URL params
+  const { roomName } = useParams();
+  
+  // Get shared state from App component
+  const { 
+    players, 
+    gameStarted, 
+    isCreator, 
+    startGame, 
+    leaveRoom, 
+    addAI, 
+    removePlayer, 
+    gameState, 
+    socket
+  } = useOutletContext();
+
   useEffect(() => {
     if (roomName) {
       sessionStorage.setItem("roomName", roomName);
@@ -132,10 +138,10 @@ function GameRoom({
             <PreStartDisplay
               players={players}
               isCreator={isCreator}
-              onGameStart={onGameStart}
-              onRoomLeave={onRoomLeave}
-              onAddAI={onAddAI}
-              onRemovePlayer={onRemovePlayer}
+              onGameStart={startGame}
+              onRoomLeave={leaveRoom}
+              onAddAI={addAI}
+              onRemovePlayer={removePlayer}
             />
           )}
         </main>
