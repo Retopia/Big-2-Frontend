@@ -85,6 +85,11 @@ function App() {
       navigate('/play/multiplayer');
     });
 
+    socket.on("joinAIGameError", (error) => {
+      addToast(error.message, "error");
+      navigate('/play/ai');
+    });
+
     socket.on("gameStateUpdate", (gameState) => setGameState(gameState));
 
     socket.on("gameEnded", (result) => {
@@ -166,23 +171,26 @@ function App() {
     sessionStorage.setItem("roomName", roomName);
     sessionStorage.setItem("username", username);
 
-    // Join the AI room
-    socket.emit("joinRoom", { roomName, playerName: username });
-
+    socket.emit("startAIGame", {roomName, playerName: username, aiCount, difficulty})
+    
     // Navigate to the room
     navigate(`/room/${roomName}`);
 
-    // Add AI players based on count
-    setTimeout(() => {
-      for (let i = 0; i < aiCount; i++) {
-        socket.emit("addAI", { roomName, difficulty });
-      }
+    // Join the AI room
+    // socket.emit("joinRoom", { roomName, playerName: username });
 
-      // Automatically start the game after a short delay
-      setTimeout(() => {
-        socket.emit("startGame", { roomName });
-      }, 1000);
-    }, 500);
+
+    // Add AI players based on count
+    // setTimeout(() => {
+    //   for (let i = 0; i < aiCount; i++) {
+    //     socket.emit("addAI", { roomName, difficulty });
+    //   }
+
+    //   // Automatically start the game after a short delay
+    //   setTimeout(() => {
+    //     socket.emit("startGame", { roomName });
+    //   }, 1000);
+    // }, 500);
   }
 
   // Make app state available to child components
