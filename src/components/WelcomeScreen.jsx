@@ -5,7 +5,7 @@ const WelcomeScreen = () => {
 
   return (
     <div className="max-w-4xl mx-auto h-full flex flex-col justify-center pt-16 sm:pt-0">
-      <div className="text-center mb-10">
+      <div className="text-center mb-10 mt-6">
         <h1 className="text-5xl font-bold text-blue-400 mb-6">Big 2 Live</h1>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
           Play the classic Big 2 card game (also known as Deuces, Pusoy Dos, or Chinese Poker)
@@ -33,7 +33,7 @@ const WelcomeScreen = () => {
         </div>
       </div>
 
-      <div className="mt-12 text-center">
+      <div className="mt-10 mb-10 text-center">
         <button
           className="text-blue-400 hover:text-blue-300 font-medium text-lg"
           onClick={() => navigate('/rules')}
