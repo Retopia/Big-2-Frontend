@@ -94,7 +94,7 @@ function OpponentHand({ playerName, cardCount, isActive }) {
 
 // Table represents the play area where cards are placed
 function Table({ lastPlayedHand, currentTurn }) {
-  const username = sessionStorage.getItem("username");
+  const username = localStorage.getItem("username");
   const isYourTurn = currentTurn === username;
 
   return (
@@ -125,8 +125,8 @@ function Table({ lastPlayedHand, currentTurn }) {
 function GameDisplay({ gameState, socket }) {
   const [selectedCards, setSelectedCards] = useState([]);
   const [sortBySuit, setSortBySuit] = useState(false);
-  const username = sessionStorage.getItem("username");
-  const roomName = sessionStorage.getItem("roomName") || "";
+  const username = localStorage.getItem("username");
+  const roomName = localStorage.getItem("roomName") || "";
 
   const getCardValue = (card) => {
     let value;

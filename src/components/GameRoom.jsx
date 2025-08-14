@@ -55,7 +55,7 @@ function LeaveRoomButton({ onRoomLeave }) {
 }
 
 function PlayerList({ players, isCreator, onRemovePlayer }) {
-  const username = sessionStorage.getItem("username");
+  const username = localStorage.getItem("username");
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
@@ -116,7 +116,7 @@ function GameRoom() {
 
   useEffect(() => {
     if (roomName) {
-      sessionStorage.setItem("roomName", roomName);
+      localStorage.setItem("roomName", roomName);
     }
   }, [roomName]);
 

@@ -1,21 +1,15 @@
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { ToastContainer } from "./components/ToastContainer";
 import { useToast } from "./hooks/useToast";
 import { JsonLd } from './components/JsonLd';
-
-// Create the socket connection
-const socket = io(
-  window.location.hostname === "localhost"
-    ? "http://localhost:3002"
-    : "https://api.big2.prestontang.dev",
-  { withCredentials: true }
-);
+import { useSocket } from "./hooks/useSocket";
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const socket = useSocket();
+  console.log('🏗️ App component mounting/rendering');
   const [players, setPlayers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [inRoom, setInRoom] = useState(false);
@@ -54,12 +48,36 @@ function App() {
   }, [inRoom, lobbyControlsData.roomName]);
 
   useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+
+    const handleConnect = () => {
+      console.log("connected")
+      if (storedUsername) {
+        socket.emit("joinOrReconnect", { username: storedUsername });
+        setLobbyControlsData(prev => ({ ...prev, username: storedUsername }));
+      } else {
+        socket.emit("requestRandomUsername");
+      }
+    };
+
+    socket.on("connect", handleConnect);
+
+    if (socket.connected) {
+      handleConnect();
+    }
+
+    socket.on("disconnect", () => {
+      console.log("disconnected")
+    });
+
     socket.on("assignUsername", (data) => {
-      sessionStorage.setItem("username", data.username);
+      console.log("Assigning username", data.username)
+      localStorage.setItem("username", data.username);
       setLobbyControlsData(prev => ({ ...prev, username: data.username }));
     });
 
     socket.on("roomUpdate", (data) => {
+      console.log("Room Update", data)
       setPlayers(data.players);
       setCreatorID(data.creatorID);
     });
@@ -100,15 +118,18 @@ function App() {
     socket.emit("requestRoomList");
 
     return () => {
+      socket.off("connect", handleConnect);
       socket.off("assignUsername");
       socket.off("roomUpdate");
       socket.off("roomList");
       socket.off("gameStarted");
       socket.off("gameError");
       socket.off("joinError");
+      socket.off("joinAIGameError");
       socket.off("forceLeave");
       socket.off("gameStateUpdate");
       socket.off("gameEnded");
+
     };
   }, [addToast, navigate]);
 
@@ -125,8 +146,8 @@ function App() {
     setLobbyControlsData({ username: formData.username, roomName: formData.roomName });
     setInRoom(true);
 
-    sessionStorage.setItem("roomName", formData.roomName);
-    sessionStorage.setItem("username", formData.username);
+    localStorage.setItem("roomName", formData.roomName);
+    localStorage.setItem("username", formData.username);
 
     socket.emit("joinRoom", { roomName: formData.roomName, playerName: formData.username });
 
@@ -138,6 +159,10 @@ function App() {
     setInRoom(false);
     socket.emit("leaveRoom");
     navigate('/');
+  }
+
+  function sendUsername() {
+    socket.emit("updateUsername", { username: lobbyControlsData.username });
   }
 
   function startGame() {
@@ -168,29 +193,15 @@ function App() {
     setLobbyControlsData({ username, roomName });
     setInRoom(true);
 
-    sessionStorage.setItem("roomName", roomName);
-    sessionStorage.setItem("username", username);
+    localStorage.setItem("roomName", roomName);
+    localStorage.setItem("username", username);
 
-    socket.emit("startAIGame", {roomName, playerName: username, aiCount, difficulty})
-    
+    sendUsername();
+
+    socket.emit("startAIGame", { roomName, playerName: username, aiCount, difficulty })
+
     // Navigate to the room
     navigate(`/room/${roomName}`);
-
-    // Join the AI room
-    // socket.emit("joinRoom", { roomName, playerName: username });
-
-
-    // Add AI players based on count
-    // setTimeout(() => {
-    //   for (let i = 0; i < aiCount; i++) {
-    //     socket.emit("addAI", { roomName, difficulty });
-    //   }
-
-    //   // Automatically start the game after a short delay
-    //   setTimeout(() => {
-    //     socket.emit("startGame", { roomName });
-    //   }, 1000);
-    // }, 500);
   }
 
   // Make app state available to child components
