@@ -3,6 +3,7 @@ import { useParams, useOutletContext } from "react-router";
 import { GameDisplay } from "./GameComponents";
 
 function PreStartDisplay({ players, isCreator, onGameStart, onRoomLeave, onAddAI, onRemovePlayer }) {
+  console.log("is creator:", isCreator);
   return (
     <div className="flex flex-col space-y-6">
       <PlayerList players={players} isCreator={isCreator} onRemovePlayer={onRemovePlayer} />

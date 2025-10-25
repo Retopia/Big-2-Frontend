@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { ToastContainer } from "./components/ToastContainer";
 import { useToast } from "./hooks/useToast";
-import { JsonLd } from './components/JsonLd';
+import { JsonLd } from "./components/JsonLd";
 import { useSocket } from "./hooks/useSocket";
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const socket = useSocket();
-  console.log('🏗️ App component mounting/rendering');
+  console.log("🏗️ App component mounting/rendering");
   const [players, setPlayers] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [inRoom, setInRoom] = useState(false);
@@ -24,7 +24,7 @@ function App() {
     lastPlayedHand: [],
     currentPlayer: "",
     players: [],
-    round: 1
+    round: 1,
   });
 
   // Initialize toast hook
@@ -32,29 +32,29 @@ function App() {
 
   // Check if we're in a room based on the URL
   useEffect(() => {
-    const isInRoom = location.pathname.startsWith('/room/');
+    const isInRoom = location.pathname.startsWith("/room/");
     setInRoom(isInRoom);
 
     if (isInRoom) {
-      const roomName = location.pathname.split('/').pop();
-      setLobbyControlsData(prev => ({ ...prev, roomName }));
+      const roomName = location.pathname.split("/").pop();
+      setLobbyControlsData((prev) => ({ ...prev, roomName }));
     }
   }, [location]);
 
   useEffect(() => {
     document.title = inRoom
       ? `Playing in ${lobbyControlsData.roomName} | Big 2 Live`
-      : 'Play Big 2 Card Game Online | Big 2 Live';
+      : "Play Big 2 Card Game Online | Big 2 Live";
   }, [inRoom, lobbyControlsData.roomName]);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
 
     const handleConnect = () => {
-      console.log("connected")
+      console.log("connected");
       if (storedUsername) {
         socket.emit("joinOrReconnect", { username: storedUsername });
-        setLobbyControlsData(prev => ({ ...prev, username: storedUsername }));
+        setLobbyControlsData((prev) => ({ ...prev, username: storedUsername }));
       } else {
         socket.emit("requestRandomUsername");
       }
@@ -67,17 +67,17 @@ function App() {
     }
 
     socket.on("disconnect", () => {
-      console.log("disconnected")
+      console.log("disconnected");
     });
 
     socket.on("assignUsername", (data) => {
-      console.log("Assigning username", data.username)
+      console.log("Assigning username", data.username);
       localStorage.setItem("username", data.username);
-      setLobbyControlsData(prev => ({ ...prev, username: data.username }));
+      setLobbyControlsData((prev) => ({ ...prev, username: data.username }));
     });
 
     socket.on("roomUpdate", (data) => {
-      console.log("Room Update", data)
+      console.log("Room Update", data);
       setPlayers(data.players);
       setCreatorID(data.creatorID);
     });
@@ -85,7 +85,7 @@ function App() {
     socket.on("forceLeave", () => {
       addToast("You have been removed from the room.", "error");
       setInRoom(false);
-      navigate('/');
+      navigate("/");
     });
 
     socket.on("roomList", (data) => setRooms(data.rooms || []));
@@ -100,12 +100,12 @@ function App() {
 
     socket.on("joinError", (error) => {
       addToast(error.message, "error");
-      navigate('/play/multiplayer');
+      navigate("/play/multiplayer");
     });
 
     socket.on("joinAIGameError", (error) => {
       addToast(error.message, "error");
-      navigate('/play/ai');
+      navigate("/play/ai");
     });
 
     socket.on("gameStateUpdate", (gameState) => setGameState(gameState));
@@ -129,9 +129,8 @@ function App() {
       socket.off("forceLeave");
       socket.off("gameStateUpdate");
       socket.off("gameEnded");
-
     };
-  }, [addToast, navigate]);
+  }, [addToast, navigate, socket]);
 
   function joinRoom(formData) {
     if (!formData.roomName?.trim()) {
@@ -143,13 +142,21 @@ function App() {
       return;
     }
 
-    setLobbyControlsData({ username: formData.username, roomName: formData.roomName });
+    setLobbyControlsData({
+      username: formData.username,
+      roomName: formData.roomName,
+    });
     setInRoom(true);
+    // Optimistically set creatorID so UI instantly treats this client as owner
+    setCreatorID(socket.id);
 
     localStorage.setItem("roomName", formData.roomName);
     localStorage.setItem("username", formData.username);
 
-    socket.emit("joinRoom", { roomName: formData.roomName, playerName: formData.username });
+    socket.emit("joinRoom", {
+      roomName: formData.roomName,
+      playerName: formData.username,
+    });
 
     // Navigate to the room
     navigate(`/room/${formData.roomName}`);
@@ -158,7 +165,7 @@ function App() {
   function leaveRoom() {
     setInRoom(false);
     socket.emit("leaveRoom");
-    navigate('/');
+    navigate("/");
   }
 
   function sendUsername() {
@@ -174,7 +181,10 @@ function App() {
   }
 
   function removePlayer(playerName) {
-    socket.emit("removePlayer", { roomName: lobbyControlsData.roomName, playerName });
+    socket.emit("removePlayer", {
+      roomName: lobbyControlsData.roomName,
+      playerName,
+    });
     addToast(`Player ${playerName} has been removed`, "warning");
   }
 
@@ -192,13 +202,19 @@ function App() {
 
     setLobbyControlsData({ username, roomName });
     setInRoom(true);
+    setCreatorID(socket.id); // immediate ownership flag
 
     localStorage.setItem("roomName", roomName);
     localStorage.setItem("username", username);
 
     sendUsername();
 
-    socket.emit("startAIGame", { roomName, playerName: username, aiCount, difficulty })
+    socket.emit("startAIGame", {
+      roomName,
+      playerName: username,
+      aiCount,
+      difficulty,
+    });
 
     // Navigate to the room
     navigate(`/room/${roomName}`);
@@ -222,8 +238,10 @@ function App() {
     addAI,
     removePlayer,
     startAIGame,
-    addToast
+    addToast,
   };
+
+  console.log("socket id, creatorid, isCreator:", socket.id, creatorID, socket.id === creatorID);
 
   return (
     <>
@@ -231,15 +249,16 @@ function App() {
         data={{
           "@context": "https://schema.org",
           "@type": "WebApplication",
-          "name": "Big 2 Live",
-          "applicationCategory": "GameApplication",
-          "operatingSystem": "Web Browser",
-          "description": "Play Big 2 (Pusoy Dos, Chinese Poker) online for free with friends or AI opponents.",
-          "offers": {
+          name: "Big 2 Live",
+          applicationCategory: "GameApplication",
+          operatingSystem: "Web Browser",
+          description:
+            "Play Big 2 (Pusoy Dos, Chinese Poker) online for free with friends or AI opponents.",
+          offers: {
             "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
-          }
+            price: "0",
+            priceCurrency: "USD",
+          },
         }}
       />
 
@@ -247,15 +266,19 @@ function App() {
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-        <main className={"container mx-auto px-4 flex-grow flex items-center justify-center"}>
-          <div className={'w-full'}>
+        <main
+          className={
+            "container mx-auto px-4 flex-grow flex items-center justify-center"
+          }
+        >
+          <div className={"w-full"}>
             {/* This is where child routes will be rendered */}
             <Outlet context={appState} />
           </div>
         </main>
 
         {/* Footer will stay at bottom due to flex layout */}
-        {location.pathname === '/' && !inRoom && (
+        {location.pathname === "/" && !inRoom && (
           <footer className="bg-gray-800 py-4 text-center text-gray-400 mt-auto">
             <p>&copy; 2025 Big 2 Live | Created by Retopia</p>
           </footer>
