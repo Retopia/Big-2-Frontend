@@ -71,7 +71,7 @@ function OpponentHand({ playerName, cardCount, isActive }) {
       className={`mb-2 p-3 rounded-lg transition-colors duration-200
       ${isActive ? "bg-gray-700 ring-2 ring-yellow-400" : "bg-gray-800"}`}
     >
-      <div className="flex items-center">
+      <div className="flex items-center justify-between">
         {/* Player name and active status */}
         <div className="flex items-center">
           {isActive && (
@@ -114,7 +114,7 @@ function OpponentHand({ playerName, cardCount, isActive }) {
   );
 }
 
-// Table represents the play area where cards are placed
+//   represents the play area where cards are placed
 function Table({ lastPlayedHand, currentTurn, lastPlayedBy }) {
   const username = localStorage.getItem("username");
   const isYourTurn = currentTurn === username;
