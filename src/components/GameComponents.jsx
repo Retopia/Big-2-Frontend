@@ -1,5 +1,93 @@
 import { useState } from "react";
 
+const getCardValue = (card) => {
+  let value;
+  switch (card.value) {
+    case "2":
+      value = 15;
+      break;
+    case "A":
+      value = 14;
+      break;
+    case "K":
+      value = 13;
+      break;
+    case "Q":
+      value = 12;
+      break;
+    case "J":
+      value = 11;
+      break;
+    default:
+      value = parseInt(card.value);
+      break;
+  }
+
+  // Add suit weight (Diamond < Club < Heart < Spade)
+  switch (card.suit) {
+    case "♦":
+      value += 0.1;
+      break;
+    case "♣":
+      value += 0.2;
+      break;
+    case "♥":
+      value += 0.3;
+      break;
+    case "♠":
+      value += 0.4;
+      break;
+  }
+
+  return value;
+};
+
+const getSuitValue = (card) => {
+  // First by suit (Club < Diamond < Heart < Spade)
+  let suitValue;
+  switch (card.suit) {
+    case "♣":
+      suitValue = 1;
+      break;
+    case "♦":
+      suitValue = 2;
+      break;
+    case "♥":
+      suitValue = 3;
+      break;
+    case "♠":
+      suitValue = 4;
+      break;
+    default:
+      suitValue = 0;
+  }
+
+  // Then by card value
+  let cardValue;
+  switch (card.value) {
+    case "2":
+      cardValue = 15;
+      break;
+    case "A":
+      cardValue = 14;
+      break;
+    case "K":
+      cardValue = 13;
+      break;
+    case "Q":
+      cardValue = 12;
+      break;
+    case "J":
+      cardValue = 11;
+      break;
+    default:
+      cardValue = parseInt(card.value);
+      break;
+  }
+
+  return suitValue * 100 + cardValue; // Multiply suit by 100 to prioritize suit grouping
+};
+
 // Helper function to get proper card representation (A, K, Q, J instead of text)
 const getCardDisplay = (value) => {
   switch (value) {
@@ -119,6 +207,10 @@ function Table({ lastPlayedHand, currentTurn, lastPlayedBy }) {
   const username = localStorage.getItem("username");
   const isYourTurn = currentTurn === username;
 
+  const sortedLastPlayedHand = [...(lastPlayedHand || [])].sort((a, b) =>
+      getCardValue(a) - getCardValue(b)
+  );
+
   return (
     <div className="my-4 p-4 bg-gray-800 rounded-lg">
       <div className="flex justify-between items-center mb-2 gap-2">
@@ -140,7 +232,7 @@ function Table({ lastPlayedHand, currentTurn, lastPlayedBy }) {
         ) : (
           <>
             <div className="flex flex-wrap justify-center">
-              {lastPlayedHand.map((card, index) => (
+              {sortedLastPlayedHand.map((card, index) => (
                 <Card key={index} suit={card.suit} value={card.value} />
               ))}
             </div>
@@ -162,94 +254,6 @@ function GameDisplay({ gameState, socket }) {
   const [sortBySuit, setSortBySuit] = useState(false);
   const username = localStorage.getItem("username");
   const roomName = localStorage.getItem("roomName") || "";
-
-  const getCardValue = (card) => {
-    let value;
-    switch (card.value) {
-      case "2":
-        value = 15;
-        break;
-      case "A":
-        value = 14;
-        break;
-      case "K":
-        value = 13;
-        break;
-      case "Q":
-        value = 12;
-        break;
-      case "J":
-        value = 11;
-        break;
-      default:
-        value = parseInt(card.value);
-        break;
-    }
-
-    // Add suit weight (Diamond < Club < Heart < Spade)
-    switch (card.suit) {
-      case "♦":
-        value += 0.1;
-        break;
-      case "♣":
-        value += 0.2;
-        break;
-      case "♥":
-        value += 0.3;
-        break;
-      case "♠":
-        value += 0.4;
-        break;
-    }
-
-    return value;
-  };
-
-  const getSuitValue = (card) => {
-    // First by suit (Club < Diamond < Heart < Spade)
-    let suitValue;
-    switch (card.suit) {
-      case "♣":
-        suitValue = 1;
-        break;
-      case "♦":
-        suitValue = 2;
-        break;
-      case "♥":
-        suitValue = 3;
-        break;
-      case "♠":
-        suitValue = 4;
-        break;
-      default:
-        suitValue = 0;
-    }
-
-    // Then by card value
-    let cardValue;
-    switch (card.value) {
-      case "2":
-        cardValue = 15;
-        break;
-      case "A":
-        cardValue = 14;
-        break;
-      case "K":
-        cardValue = 13;
-        break;
-      case "Q":
-        cardValue = 12;
-        break;
-      case "J":
-        cardValue = 11;
-        break;
-      default:
-        cardValue = parseInt(card.value);
-        break;
-    }
-
-    return suitValue * 100 + cardValue; // Multiply suit by 100 to prioritize suit grouping
-  };
 
   const sortedHand = [...(gameState.hand || [])].sort((a, b) =>
     sortBySuit

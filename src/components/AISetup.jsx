@@ -6,7 +6,7 @@ const AISetup = () => {
   const { lobbyControlsData, setLobbyControlsData, startAIGame } = useOutletContext();
   const [aiSettings, setAiSettings] = useState({
     aiCount: 3,
-    difficulty: "medium",
+    difficulty: "standard",
     autoSort: true,
     timerEnabled: false
   });
@@ -79,14 +79,13 @@ const AISetup = () => {
                 value={aiSettings.difficulty}
                 onChange={(e) => setAiSettings({ ...aiSettings, difficulty: e.target.value })}
               >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
+                <option value="standard">Standard</option>
+                <option value="llm">LLM</option>
               </select>
             </div>
           </div>
           <button
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded transition duration-200 mt-4"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition duration-200 mt-4"
             onClick={handleSubmit}
           >
             Start Game

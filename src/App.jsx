@@ -19,6 +19,7 @@ function App() {
     username: "",
     roomName: "",
   });
+  const [aiDifficulty, setAiDifficulty] = useState("standard");
   const [gameState, setGameState] = useState({
     hand: [],
     lastPlayedHand: [],
@@ -176,8 +177,8 @@ function App() {
     socket.emit("startGame", { roomName: lobbyControlsData.roomName });
   }
 
-  function addAI() {
-    socket.emit("addAI", { roomName: lobbyControlsData.roomName });
+  function addAI(difficulty = aiDifficulty) {
+    socket.emit("addAI", { roomName: lobbyControlsData.roomName, difficulty });
   }
 
   function removePlayer(playerName) {
@@ -231,6 +232,8 @@ function App() {
     lobbyControlsData,
     gameState,
     isCreator: socket.id === creatorID,
+    aiDifficulty,
+    setAiDifficulty,
     setLobbyControlsData,
     joinRoom,
     leaveRoom,
@@ -280,7 +283,21 @@ function App() {
         {/* Footer will stay at bottom due to flex layout */}
         {location.pathname === "/" && !inRoom && (
           <footer className="bg-gray-800 py-4 text-center text-gray-400 mt-auto">
-            <p>&copy; 2025 Big 2 Live | Created by Retopia</p>
+            <p className="text-base">
+              <span>&copy; 2025 Big 2 Live</span>
+              <span className="mx-2">|</span>
+              <a href="https://prestontang.dev" className="hover:text-blue-400 transition">
+                Created By Retopia
+              </a>
+              <span className="mx-2">|</span>
+              <a href="/changelog" className="hover:text-blue-400 transition">
+                Changelog
+              </a>
+              <span className="mx-2">|</span>
+              <a href="/contact" className="hover:text-blue-400 transition">
+                Contact Me
+              </a>
+            </p>
           </footer>
         )}
       </div>

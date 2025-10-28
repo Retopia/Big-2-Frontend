@@ -7,7 +7,7 @@ const GameRules = () => {
   return (
     <div className="py-6 sm:py-12 px-1.5 sm:px-0">
       <div className="max-w-4xl mx-auto bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg">
-        <div className="mb-6">
+        <div className="mb-2">
           {/* Small screens: stacked */}
           <div className="flex flex-col items-start sm:hidden space-y-2">
             <BackButton to="/" label="Back" />

@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import App from './App';
@@ -9,6 +8,8 @@ import MultiplayerSetup from './components/MultiplayerSetup';
 import AISetup from './components/AISetup';
 import GameRules from './components/GameRules';
 import GameRoom from './components/GameRoom';
+import Changelog from './components/Changelog';
+import Contact from './components/Contact';
 
 // Create router
 const router = createBrowserRouter([
@@ -31,6 +32,14 @@ const router = createBrowserRouter([
       {
         path: '/rules',
         element: <GameRules />
+      },
+      {
+        path: '/changelog',
+        element: <Changelog />
+      },
+      {
+        path: '/contact',
+        element: <Contact />
       },
       {
         path: '/room/:roomName',

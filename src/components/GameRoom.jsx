@@ -1,9 +1,93 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useOutletContext } from "react-router";
 import { GameDisplay } from "./GameComponents";
 
+function AddAIModal({ isOpen, onClose, onConfirm }) {
+  const [selectedDifficulty, setSelectedDifficulty] = useState("standard");
+
+  if (!isOpen) return null;
+
+  const handleConfirm = () => {
+    onConfirm(selectedDifficulty);
+    onClose();
+  };
+
+  const handleBackdropClick = (e) => {
+    // Only close if clicking the backdrop itself, not the modal content
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full">
+        <h2 className="text-2xl font-bold text-blue-400 mb-4">Add AI Player</h2>
+        <p className="text-gray-300 mb-6">Select the AI type for your opponent:</p>
+        
+        <div className="space-y-3 mb-6">
+          <label className="flex items-center p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650 transition">
+            <input
+              type="radio"
+              name="difficulty"
+              value="standard"
+              checked={selectedDifficulty === "standard"}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              className="w-4 h-4 text-indigo-600"
+            />
+            <div className="ml-3">
+              <div className="font-medium text-white">Standard AI</div>
+              <div className="text-sm text-gray-400">Rule-based algorithm, fast and predictable</div>
+            </div>
+          </label>
+          
+          <label className="flex items-center p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-650 transition">
+            <input
+              type="radio"
+              name="difficulty"
+              value="llm"
+              checked={selectedDifficulty === "llm"}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              className="w-4 h-4 text-indigo-600"
+            />
+            <div className="ml-3">
+              <div className="font-medium text-white">LLM AI</div>
+              <div className="text-sm text-gray-400">Powered by a small Large Language Model</div>
+            </div>
+          </label>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={handleConfirm}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+          >
+            Add AI
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PreStartDisplay({ players, isCreator, onGameStart, onRoomLeave, onAddAI, onRemovePlayer }) {
+  const [showAIModal, setShowAIModal] = useState(false);
+  
   console.log("is creator:", isCreator);
+  
+  const handleAddAI = (difficulty) => {
+    onAddAI(difficulty);
+  };
+  
   return (
     <div className="flex flex-col space-y-6">
       <PlayerList players={players} isCreator={isCreator} onRemovePlayer={onRemovePlayer} />
@@ -11,7 +95,7 @@ function PreStartDisplay({ players, isCreator, onGameStart, onRoomLeave, onAddAI
       <div className="flex flex-wrap gap-4 justify-center">
         {isCreator && (
           <button 
-            onClick={onAddAI}
+            onClick={() => setShowAIModal(true)}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200 shadow-md"
           >
             Add AI Player
@@ -40,6 +124,12 @@ function PreStartDisplay({ players, isCreator, onGameStart, onRoomLeave, onAddAI
           You need at least 2 players to start the game
         </p>
       )}
+      
+      <AddAIModal 
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        onConfirm={handleAddAI}
+      />
     </div>
   );
 }
@@ -82,7 +172,8 @@ function PlayerList({ players, isCreator, onRemovePlayer }) {
                 onClick={() => onRemovePlayer(player)}
                 className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition duration-200"
               >
-                Remove
+                <span className="hidden sm:inline">Remove</span>
+                <span className="sm:hidden">✕</span>
               </button>
             )}
           </li>
