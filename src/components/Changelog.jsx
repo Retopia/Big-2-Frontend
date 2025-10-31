@@ -6,13 +6,21 @@ export default function Changelog() {
 
   const updates = [
     {
+      title: "AI Opponents and Strategy Improvements",
+      date: "October 31, 2025",
+      changes: [
+        "Added support for LLM Opponents with advanced strategies",
+        "Improved AI response time with timeout handling",
+        "Optimized Standard AI blocking strategy for better gameplay",
+      ],
+    },
+    {
       title: "UI Enhancements and Gameplay Improvements",
       date: "October 28, 2025",
       changes: [
         "Table area now shows last played hand and current player's turn",
         "Added hover animation when selecting cards",
         "Reduced overall height of Game Controls for better visibility",
-        "Added LLM AI difficulty for more challenging gameplay",
       ],
     },
   ];
@@ -21,7 +29,7 @@ export default function Changelog() {
     <div className="min-h-screen bg-gray-900 text-white py-8">
       <div className="container mx-auto px-4 max-w-3xl">
         <BackButton onClick={() => navigate("/")} />
-        
+
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-400 mb-2">Changelog</h1>
           <p className="text-gray-400">Track updates and new features</p>

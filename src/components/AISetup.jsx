@@ -5,7 +5,7 @@ import BackButton from "./BackButton";
 const AISetup = () => {
   const { lobbyControlsData, setLobbyControlsData, startAIGame } = useOutletContext();
   const [aiSettings, setAiSettings] = useState({
-    aiCount: 3,
+    aiCount: 1,
     difficulty: "standard",
     autoSort: true,
     timerEnabled: false

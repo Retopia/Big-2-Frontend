@@ -283,21 +283,22 @@ function App() {
         {/* Footer will stay at bottom due to flex layout */}
         {location.pathname === "/" && !inRoom && (
           <footer className="bg-gray-800 py-4 text-center text-gray-400 mt-auto">
-            <p className="text-base">
+            {/* Mobile: Stack vertically, Desktop: Horizontal */}
+            <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:justify-center md:items-center text-sm md:text-base">
               <span>&copy; 2025 Big 2 Live</span>
-              <span className="mx-2">|</span>
+              <span className="hidden md:inline mx-2">|</span>
               <a href="https://prestontang.dev" className="hover:text-blue-400 transition">
                 Created By Retopia
               </a>
-              <span className="mx-2">|</span>
+              <span className="hidden md:inline mx-2">|</span>
               <a href="/changelog" className="hover:text-blue-400 transition">
                 Changelog
               </a>
-              <span className="mx-2">|</span>
+              <span className="hidden md:inline mx-2">|</span>
               <a href="/contact" className="hover:text-blue-400 transition">
                 Contact Me
               </a>
-            </p>
+            </div>
           </footer>
         )}
       </div>
