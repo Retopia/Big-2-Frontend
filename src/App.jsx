@@ -5,6 +5,27 @@ import { useToast } from "./hooks/useToast";
 import { JsonLd } from "./components/JsonLd";
 import { useSocket } from "./hooks/useSocket";
 
+// Validation function for room names and usernames
+function validateName(name, type = "name") {
+  const trimmed = name?.trim();
+
+  if (!trimmed) {
+    return { valid: false, error: `${type} cannot be empty!` };
+  }
+
+  if (trimmed.length > 50) {
+    return { valid: false, error: `${type} is too long (max 50 characters)` };
+  }
+
+  // Check for problematic characters that could break routing or cause issues
+  const invalidChars = /[\/\\]/;
+  if (invalidChars.test(trimmed)) {
+    return { valid: false, error: `${type} cannot contain / or \\ characters` };
+  }
+
+  return { valid: true, value: trimmed };
+}
+
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,7 +58,9 @@ function App() {
     setInRoom(isInRoom);
 
     if (isInRoom) {
-      const roomName = location.pathname.split("/").pop();
+      // Decode the room name from the URL
+      const encodedRoomName = location.pathname.split("/").pop();
+      const roomName = decodeURIComponent(encodedRoomName);
       setLobbyControlsData((prev) => ({ ...prev, roomName }));
     }
   }, [location]);
@@ -134,33 +157,41 @@ function App() {
   }, [addToast, navigate, socket]);
 
   function joinRoom(formData) {
-    if (!formData.roomName?.trim()) {
-      addToast("Room name cannot be empty!", "warning");
-      return;
-    }
-    if (!formData.username?.trim()) {
-      addToast("Username cannot be empty!", "warning");
+    // Validate room name
+    const roomValidation = validateName(formData.roomName, "Room name");
+    if (!roomValidation.valid) {
+      addToast(roomValidation.error, "warning");
       return;
     }
 
+    // Validate username
+    const usernameValidation = validateName(formData.username, "Username");
+    if (!usernameValidation.valid) {
+      addToast(usernameValidation.error, "warning");
+      return;
+    }
+
+    const roomName = roomValidation.value;
+    const username = usernameValidation.value;
+
     setLobbyControlsData({
-      username: formData.username,
-      roomName: formData.roomName,
+      username,
+      roomName,
     });
     setInRoom(true);
     // Optimistically set creatorID so UI instantly treats this client as owner
     setCreatorID(socket.id);
 
-    localStorage.setItem("roomName", formData.roomName);
-    localStorage.setItem("username", formData.username);
+    localStorage.setItem("roomName", roomName);
+    localStorage.setItem("username", username);
 
     socket.emit("joinRoom", {
-      roomName: formData.roomName,
-      playerName: formData.username,
+      roomName,
+      playerName: username,
     });
 
-    // Navigate to the room
-    navigate(`/room/${formData.roomName}`);
+    // Navigate to the room with URL-encoded room name
+    navigate(`/room/${encodeURIComponent(roomName)}`);
   }
 
   function leaveRoom() {
@@ -190,16 +221,18 @@ function App() {
   }
 
   function startAIGame(formData) {
-    // Create a special AI room
-    const roomName = `AI-Game-${Math.floor(Math.random() * 10000)}`;
-    const username = formData.username;
-    const aiCount = formData.aiCount || 3;
-    const difficulty = formData.difficulty || "medium";
-
-    if (!username?.trim()) {
-      addToast("Username cannot be empty!", "warning");
+    // Validate username
+    const usernameValidation = validateName(formData.username, "Username");
+    if (!usernameValidation.valid) {
+      addToast(usernameValidation.error, "warning");
       return;
     }
+
+    // Create a special AI room
+    const roomName = `AI-Game-${Math.floor(Math.random() * 10000)}`;
+    const username = usernameValidation.value;
+    const aiCount = formData.aiCount || 3;
+    const difficulty = formData.difficulty || "medium";
 
     setLobbyControlsData({ username, roomName });
     setInRoom(true);
@@ -217,8 +250,8 @@ function App() {
       difficulty,
     });
 
-    // Navigate to the room
-    navigate(`/room/${roomName}`);
+    // Navigate to the room with URL-encoded room name
+    navigate(`/room/${encodeURIComponent(roomName)}`);
   }
 
   // Make app state available to child components
