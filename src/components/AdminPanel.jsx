@@ -3,17 +3,50 @@ import { API_BASE_URL } from "../config";
 import BackButton from "./BackButton";
 
 const ANNOUNCEMENT_TYPES = ["info", "success", "warning", "error"];
+const ADMIN_AUTH_TOKEN_STORAGE_KEY = "big2_admin_token";
+
+function getStoredAdminToken() {
+  try {
+    return localStorage.getItem(ADMIN_AUTH_TOKEN_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function setStoredAdminToken(token) {
+  try {
+    if (typeof token === "string" && token.trim()) {
+      localStorage.setItem(ADMIN_AUTH_TOKEN_STORAGE_KEY, token.trim());
+      return;
+    }
+    localStorage.removeItem(ADMIN_AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function clearStoredAdminToken() {
+  try {
+    localStorage.removeItem(ADMIN_AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    // ignore storage failures
+  }
+}
 
 async function apiRequest(path, options = {}) {
-  const hasBody = typeof options.body === "string" && options.body.length > 0;
+  const { adminToken, headers, ...fetchOptions } = options;
+  const hasBody =
+    typeof fetchOptions.body === "string" && fetchOptions.body.length > 0;
+  const token =
+    typeof adminToken === "string" ? adminToken : getStoredAdminToken();
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: "include",
+    ...fetchOptions,
     headers: {
       ...(hasBody ? { "Content-Type": "application/json" } : {}),
-      ...(options.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(headers || {}),
     },
-    ...options,
   });
 
   const payload = await response.json().catch(() => ({}));
@@ -58,11 +91,24 @@ function AdminPanel() {
   }
 
   async function checkSession() {
+    const token = getStoredAdminToken();
+    if (!token) {
+      setAuthenticated(false);
+      setSessionChecked(true);
+      return;
+    }
+
     try {
-      const session = await apiRequest("/admin/api/session");
+      const session = await apiRequest("/admin/api/session", {
+        adminToken: token,
+      });
       setAuthenticated(Boolean(session.authenticated));
+      if (!session.authenticated) {
+        clearStoredAdminToken();
+      }
     } catch {
       setAuthenticated(false);
+      clearStoredAdminToken();
     } finally {
       setSessionChecked(true);
     }
@@ -84,6 +130,10 @@ function AdminPanel() {
       setModelInput(aiData.llmModel || "");
       setAnnouncement(announcementData.announcement || null);
     } catch (error) {
+      if (error?.message === "Unauthorized.") {
+        clearStoredAdminToken();
+        setAuthenticated(false);
+      }
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
@@ -96,10 +146,15 @@ function AdminPanel() {
     setLoading(true);
 
     try {
-      await apiRequest("/admin/api/login", {
+      const loginData = await apiRequest("/admin/api/login", {
         method: "POST",
         body: JSON.stringify({ password }),
       });
+      if (!loginData?.token) {
+        throw new Error("Login response did not include an auth token.");
+      }
+
+      setStoredAdminToken(loginData.token);
       setAuthenticated(true);
       setPassword("");
       setSuccessMessage("Logged in.");
@@ -116,12 +171,15 @@ function AdminPanel() {
     setLoading(true);
     try {
       await apiRequest("/admin/api/logout", { method: "POST" });
+      clearStoredAdminToken();
       setAuthenticated(false);
       setRooms([]);
       setPlayers([]);
       setAnnouncement(null);
       setSuccessMessage("Logged out.");
     } catch (error) {
+      clearStoredAdminToken();
+      setAuthenticated(false);
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
