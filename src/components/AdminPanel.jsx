@@ -5,10 +5,12 @@ import BackButton from "./BackButton";
 const ANNOUNCEMENT_TYPES = ["info", "success", "warning", "error"];
 
 async function apiRequest(path, options = {}) {
+  const hasBody = typeof options.body === "string" && options.body.length > 0;
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...(hasBody ? { "Content-Type": "application/json" } : {}),
       ...(options.headers || {}),
     },
     ...options,
