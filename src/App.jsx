@@ -4,6 +4,19 @@ import { ToastContainer } from "./components/ToastContainer";
 import { useToast } from "./hooks/useToast";
 import { JsonLd } from "./components/JsonLd";
 import { useSocket } from "./hooks/useSocket";
+import {
+  decodeRoomNameFromPath,
+  encodeRoomNameForPath,
+  normalizeNameInput,
+  validatePlayerName,
+  validateRoomName,
+} from "./utils/nameValidation";
+
+function getRoomNameFromPath(pathname) {
+  if (!pathname.startsWith("/room/")) return "";
+  const encodedRoomName = pathname.slice("/room/".length);
+  return decodeRoomNameFromPath(encodedRoomName);
+}
 
 function App() {
   const location = useLocation();
@@ -37,7 +50,7 @@ function App() {
     setInRoom(isInRoom);
 
     if (isInRoom) {
-      const roomName = location.pathname.split("/").pop();
+      const roomName = getRoomNameFromPath(location.pathname);
       setLobbyControlsData((prev) => ({ ...prev, roomName }));
     }
   }, [location]);
@@ -116,6 +129,15 @@ function App() {
       setGameStarted(false);
     });
 
+    socket.on("announcement", (data) => {
+      if (!data?.message) return;
+      const duration =
+        typeof data.expiresAt === "number"
+          ? Math.max(1500, Math.min(data.expiresAt - Date.now(), 30000))
+          : 5000;
+      addToast(`Announcement: ${data.message}`, data.type || "info", duration);
+    });
+
     socket.emit("requestRoomList");
 
     return () => {
@@ -130,47 +152,50 @@ function App() {
       socket.off("forceLeave");
       socket.off("gameStateUpdate");
       socket.off("gameEnded");
+      socket.off("announcement");
     };
   }, [addToast, navigate, socket]);
 
   function joinRoom(formData) {
-    if (!formData.roomName?.trim()) {
-      addToast("Room name cannot be empty!", "warning");
-      return;
-    }
-    if (!formData.username?.trim()) {
-      addToast("Username cannot be empty!", "warning");
+    const roomValidation = validateRoomName(formData.roomName);
+    if (!roomValidation.ok) {
+      addToast(roomValidation.error, "warning");
       return;
     }
 
+    const playerValidation = validatePlayerName(formData.username);
+    if (!playerValidation.ok) {
+      addToast(playerValidation.error, "warning");
+      return;
+    }
+
+    const roomName = roomValidation.value;
+    const username = playerValidation.value;
+
     setLobbyControlsData({
-      username: formData.username,
-      roomName: formData.roomName,
+      username,
+      roomName,
     });
     setInRoom(true);
     // Optimistically set creatorID so UI instantly treats this client as owner
     setCreatorID(socket.id);
 
-    localStorage.setItem("roomName", formData.roomName);
-    localStorage.setItem("username", formData.username);
+    localStorage.setItem("roomName", roomName);
+    localStorage.setItem("username", username);
 
     socket.emit("joinRoom", {
-      roomName: formData.roomName,
-      playerName: formData.username,
+      roomName,
+      playerName: username,
     });
 
     // Navigate to the room
-    navigate(`/room/${formData.roomName}`);
+    navigate(`/room/${encodeRoomNameForPath(roomName)}`);
   }
 
   function leaveRoom() {
     setInRoom(false);
     socket.emit("leaveRoom");
     navigate("/");
-  }
-
-  function sendUsername() {
-    socket.emit("updateUsername", { username: lobbyControlsData.username });
   }
 
   function startGame() {
@@ -191,15 +216,17 @@ function App() {
 
   function startAIGame(formData) {
     // Create a special AI room
-    const roomName = `AI-Game-${Math.floor(Math.random() * 10000)}`;
-    const username = formData.username;
+    const roomName = normalizeNameInput(`AI-Game-${Math.floor(Math.random() * 10000)}`);
+    const playerValidation = validatePlayerName(formData.username);
     const aiCount = formData.aiCount || 3;
-    const difficulty = formData.difficulty || "medium";
+    const difficulty = formData.difficulty || "standard";
 
-    if (!username?.trim()) {
-      addToast("Username cannot be empty!", "warning");
+    if (!playerValidation.ok) {
+      addToast(playerValidation.error, "warning");
       return;
     }
+
+    const username = playerValidation.value;
 
     setLobbyControlsData({ username, roomName });
     setInRoom(true);
@@ -207,8 +234,6 @@ function App() {
 
     localStorage.setItem("roomName", roomName);
     localStorage.setItem("username", username);
-
-    sendUsername();
 
     socket.emit("startAIGame", {
       roomName,
@@ -218,7 +243,7 @@ function App() {
     });
 
     // Navigate to the room
-    navigate(`/room/${roomName}`);
+    navigate(`/room/${encodeRoomNameForPath(roomName)}`);
   }
 
   // Make app state available to child components

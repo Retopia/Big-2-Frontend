@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { normalizeNameInput } from "../utils/nameValidation";
 
 const getCardValue = (card) => {
   let value;
@@ -253,7 +254,7 @@ function GameDisplay({ gameState, socket }) {
   const [selectedCards, setSelectedCards] = useState([]);
   const [sortBySuit, setSortBySuit] = useState(false);
   const username = localStorage.getItem("username");
-  const roomName = localStorage.getItem("roomName") || "";
+  const roomName = normalizeNameInput(localStorage.getItem("roomName") || "");
 
   const sortedHand = [...(gameState.hand || [])].sort((a, b) =>
     sortBySuit

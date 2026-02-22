@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router";
 import BackButton from "./BackButton";
+import { PLAYER_NAME_MAX_LENGTH } from "../utils/nameValidation";
 
 const AISetup = () => {
   const { lobbyControlsData, setLobbyControlsData, startAIGame } = useOutletContext();
@@ -47,6 +48,7 @@ const AISetup = () => {
             <input
               id="username"
               type="text"
+              maxLength={PLAYER_NAME_MAX_LENGTH}
               value={lobbyControlsData.username}
               onChange={(e) => setLobbyControlsData({ ...lobbyControlsData, username: e.target.value })}
               placeholder="Enter your username"

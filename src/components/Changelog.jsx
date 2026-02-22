@@ -6,6 +6,15 @@ export default function Changelog() {
 
   const updates = [
     {
+      title: "Admin Tools, Stability Fixes, and Smarter AI",
+      date: "February 22, 2026",
+      changes: [
+        "Added a secure Admin Panel with room controls, player visibility, announcements, and live LLM model switching",
+        "Fixed room and username validation/sanitization issues that could break games with invalid characters or encoded names",
+        "Improved Standard AI strategy to play more varied hands with stronger pressure-based decision making",
+      ],
+    },
+    {
       title: "AI Opponents and Strategy Improvements",
       date: "October 31, 2025",
       changes: [

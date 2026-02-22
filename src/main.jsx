@@ -10,9 +10,14 @@ import GameRules from './components/GameRules';
 import GameRoom from './components/GameRoom';
 import Changelog from './components/Changelog';
 import Contact from './components/Contact';
+import AdminPanel from './components/AdminPanel';
 
 // Create router
 const router = createBrowserRouter([
+  {
+    path: '/admin',
+    element: <AdminPanel />
+  },
   {
     path: '/',
     element: <App />,

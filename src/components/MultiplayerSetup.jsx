@@ -1,6 +1,10 @@
 import { useOutletContext } from "react-router";
 import RoomList from "./RoomList";
 import BackButton from "./BackButton";
+import {
+  PLAYER_NAME_MAX_LENGTH,
+  ROOM_NAME_MAX_LENGTH,
+} from "../utils/nameValidation";
 
 const MultiplayerSetup = () => {
   const {
@@ -56,6 +60,7 @@ const MultiplayerSetup = () => {
             <input
               id="username"
               type="text"
+              maxLength={PLAYER_NAME_MAX_LENGTH}
               value={lobbyControlsData.username}
               onChange={(e) => setLobbyControlsData({ ...lobbyControlsData, username: e.target.value })}
               placeholder="Enter username"
@@ -70,6 +75,7 @@ const MultiplayerSetup = () => {
             <input
               id="roomName"
               type="text"
+              maxLength={ROOM_NAME_MAX_LENGTH}
               value={lobbyControlsData.roomName}
               onChange={(e) => setLobbyControlsData({ ...lobbyControlsData, roomName: e.target.value })}
               placeholder="Enter room name"

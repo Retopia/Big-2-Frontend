@@ -1,17 +1,13 @@
 // socket.js
 import { io } from "socket.io-client";
-
-const URL =
-  window.location.hostname === "localhost"
-    ? "http://localhost:3002"
-    : "https://api.big2.prestontang.dev";
+import { API_BASE_URL } from "./config";
 
 // More robust singleton pattern
 const SOCKET_KEY = '__big2Socket_instance';
 const CONNECTION_KEY = '__big2Socket_connected';
 
 function createSocket() {
-  const socket = io(URL, {
+  const socket = io(API_BASE_URL, {
     withCredentials: true,
     autoConnect: false
   });

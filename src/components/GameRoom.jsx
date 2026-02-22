@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useOutletContext } from "react-router";
 import { GameDisplay } from "./GameComponents";
+import { decodeRoomNameFromPath } from "../utils/nameValidation";
 
 function AddAIModal({ isOpen, onClose, onConfirm }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState("standard");
@@ -191,7 +192,8 @@ function PlayerList({ players, isCreator, onRemovePlayer }) {
 
 function GameRoom() {
   // Get roomName from URL params
-  const { roomName } = useParams();
+  const { roomName: roomNameParam } = useParams();
+  const roomName = decodeRoomNameFromPath(roomNameParam || "");
   
   // Get shared state from App component
   const { 
