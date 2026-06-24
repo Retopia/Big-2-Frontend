@@ -4,12 +4,15 @@ import { useState, useCallback, useRef } from 'react';
 export const useToast = () => {
   const [toasts, setToasts] = useState([]);
   const toastTimers = useRef({});
-  
+  const nextId = useRef(0);
+
   // Strictly limit the maximum number of toasts to prevent screen clutter
   const MAX_TOASTS = 3;
 
   const addToast = useCallback((message, type = 'info', duration = 2000) => {
-    const id = Date.now();
+    // Monotonic id — Date.now() collides when several toasts fire in the same ms,
+    // which breaks React keys and the oldest-toast removal logic.
+    const id = ++nextId.current;
     
     // Remove oldest toast if at capacity
     setToasts(prevToasts => {

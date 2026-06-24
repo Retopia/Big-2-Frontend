@@ -1,6 +1,7 @@
 // socket.js
 import { io } from "socket.io-client";
 import { API_BASE_URL } from "./config";
+import { getSocketAuth } from "./utils/sessionIdentity";
 
 // More robust singleton pattern
 const SOCKET_KEY = '__big2Socket_instance';
@@ -9,6 +10,11 @@ const CONNECTION_KEY = '__big2Socket_connected';
 function createSocket() {
   const socket = io(API_BASE_URL, {
     withCredentials: true,
+    auth: getSocketAuth(),
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 500,
+    reconnectionDelayMax: 5000,
     autoConnect: false
   });
 
@@ -39,6 +45,8 @@ const socket = getSocket();
 
 // Enhanced connect method that's more defensive
 socket.safeConnect = function() {
+  this.refreshAuth();
+
   // Check if already connected or connecting
   if (this.connected) {
     console.log('🔄 Socket already connected, skipping');
@@ -52,6 +60,10 @@ socket.safeConnect = function() {
 
   console.log('🚀 Initiating socket connection');
   this.connect();
+};
+
+socket.refreshAuth = function() {
+  this.auth = getSocketAuth();
 };
 
 // Handle HMR cleanup

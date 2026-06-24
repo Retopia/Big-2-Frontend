@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import App from './App';
 import './index.css';
+import { AuthProvider } from './context/AuthContext';
 
 import WelcomeScreen from './components/WelcomeScreen';
 import MultiplayerSetup from './components/MultiplayerSetup';
@@ -11,6 +12,8 @@ import GameRoom from './components/GameRoom';
 import Changelog from './components/Changelog';
 import Contact from './components/Contact';
 import AdminPanel from './components/AdminPanel';
+import Leaderboard from './components/Leaderboard';
+import Profile from './components/Profile';
 
 // Create router
 const router = createBrowserRouter([
@@ -39,6 +42,14 @@ const router = createBrowserRouter([
         element: <GameRules />
       },
       {
+        path: '/leaderboard',
+        element: <Leaderboard />
+      },
+      {
+        path: '/profile/:userId',
+        element: <Profile />
+      },
+      {
         path: '/changelog',
         element: <Changelog />
       },
@@ -55,5 +66,7 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <RouterProvider router={router} />
+  <AuthProvider>
+    <RouterProvider router={router} />
+  </AuthProvider>
 );

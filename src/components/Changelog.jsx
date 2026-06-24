@@ -1,10 +1,20 @@
-import { useNavigate } from "react-router";
 import BackButton from "./BackButton";
 
 export default function Changelog() {
-  const navigate = useNavigate();
-
   const updates = [
+    {
+      title: "Accounts, Ranked ELO, Leaderboards & Profiles",
+      date: "June 24, 2026",
+      changes: [
+        "Added player accounts — register or log in to save your stats across devices",
+        "Introduced ranked ELO games with a global leaderboard of registered players",
+        "Added player profiles with match history and a rating-over-time trend",
+        "Added a 'Copy invite link' button so you can pull friends into your room instantly",
+        "Added a turn timer: players who go idle on their own turn are removed so games no longer stall",
+        "Refreshed the interface with a persistent navigation bar and a cleaner mobile layout",
+        "Fixed a range of stability issues around turns, reconnects, room cleanup, and ranked result recording",
+      ],
+    },
     {
       title: "Admin Tools, Stability Fixes, and Smarter AI",
       date: "February 22, 2026",
@@ -37,7 +47,7 @@ export default function Changelog() {
   return (
     <div className="min-h-screen bg-gray-900 text-white py-8">
       <div className="container mx-auto px-4 max-w-3xl">
-        <BackButton onClick={() => navigate("/")} />
+        <BackButton to="/" label="Back" />
 
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-400 mb-2">Changelog</h1>

@@ -7,9 +7,7 @@ const AISetup = () => {
   const { lobbyControlsData, setLobbyControlsData, startAIGame } = useOutletContext();
   const [aiSettings, setAiSettings] = useState({
     aiCount: 1,
-    difficulty: "standard",
-    autoSort: true,
-    timerEnabled: false
+    difficulty: "standard"
   });
 
   const handleSubmit = () => {

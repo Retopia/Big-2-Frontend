@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /room/
+Disallow: /profile/
 
 Sitemap: https://big2.live/sitemap.xml

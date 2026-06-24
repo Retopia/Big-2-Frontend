@@ -1,7 +1,34 @@
-import { useEffect, useState } from "react";
-import { useParams, useOutletContext } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams, useOutletContext } from "react-router";
 import { GameDisplay } from "./GameComponents";
-import { decodeRoomNameFromPath } from "../utils/nameValidation";
+import { useAuth } from "../context/useAuth";
+import {
+  decodeRoomNameFromPath,
+  encodeRoomNameForPath,
+} from "../utils/nameValidation";
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-9999px";
+  textarea.style.left = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    const copied = document.execCommand("copy");
+    if (!copied) throw new Error("Copy command failed.");
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
 
 function AddAIModal({ isOpen, onClose, onConfirm }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState("standard");
@@ -80,7 +107,7 @@ function AddAIModal({ isOpen, onClose, onConfirm }) {
   );
 }
 
-function PreStartDisplay({ players, isCreator, onGameStart, onRoomLeave, onAddAI, onRemovePlayer }) {
+function PreStartDisplay({ players, playerDetails, isCreator, onGameStart, onRoomLeave, onAddAI, onRemovePlayer, onCopyInvite }) {
   const [showAIModal, setShowAIModal] = useState(false);
   
   console.log("is creator:", isCreator);
@@ -91,11 +118,23 @@ function PreStartDisplay({ players, isCreator, onGameStart, onRoomLeave, onAddAI
   
   return (
     <div className="flex flex-col space-y-6">
-      <PlayerList players={players} isCreator={isCreator} onRemovePlayer={onRemovePlayer} />
+      <PlayerList
+        players={players}
+        playerDetails={playerDetails}
+        isCreator={isCreator}
+        onRemovePlayer={onRemovePlayer}
+      />
       
       <div className="flex flex-wrap gap-4 justify-center">
+        <button
+          onClick={onCopyInvite}
+          className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-6 rounded-lg transition duration-200 shadow-md"
+        >
+          Copy Invite Link
+        </button>
+
         {isCreator && (
-          <button 
+          <button
             onClick={() => setShowAIModal(true)}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200 shadow-md"
           >
@@ -146,8 +185,9 @@ function LeaveRoomButton({ onRoomLeave }) {
   );
 }
 
-function PlayerList({ players, isCreator, onRemovePlayer }) {
+function PlayerList({ players, playerDetails, isCreator, onRemovePlayer }) {
   const username = localStorage.getItem("username");
+  const detailsByName = new Map((playerDetails || []).map((player) => [player.name, player]));
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
@@ -156,29 +196,48 @@ function PlayerList({ players, isCreator, onRemovePlayer }) {
       </h2>
       
       <ul className="space-y-3">
-        {players.map((player, index) => (
-          <li 
-            key={index}
-            className="flex justify-between items-center bg-gray-700 rounded-lg p-3 hover:bg-gray-650"
-          >
-            <div className="flex items-center">
-              <div className={`w-3 h-3 rounded-full mr-3 ${player === username ? "bg-green-500" : "bg-blue-500"}`}></div>
-              <span className={player === username ? "font-medium" : ""}>
-                {player} {player === username && "(You)"}
-              </span>
-            </div>
-            
-            {isCreator && player !== username && (
-              <button 
-                onClick={() => onRemovePlayer(player)}
-                className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition duration-200"
-              >
-                <span className="hidden sm:inline">Remove</span>
-                <span className="sm:hidden">✕</span>
-              </button>
-            )}
-          </li>
-        ))}
+        {players.map((player, index) => {
+          const details = detailsByName.get(player);
+          const connected = details?.connected !== false;
+
+          return (
+            <li
+              key={index}
+              className="flex justify-between items-center bg-gray-700 rounded-lg p-3 hover:bg-gray-650"
+            >
+              <div className="flex items-center">
+                <div
+                  className={`w-3 h-3 rounded-full mr-3 ${
+                    !connected
+                      ? "bg-yellow-400"
+                      : player === username
+                        ? "bg-green-500"
+                        : "bg-blue-500"
+                  }`}
+                ></div>
+                <span className={player === username ? "font-medium" : ""}>
+                  {player} {player === username && "(You)"}
+                  {!connected && (
+                    <span className="ml-2 text-xs text-yellow-300">Offline</span>
+                  )}
+                  {details?.rating && (
+                    <span className="ml-2 text-xs text-blue-300">ELO {details.rating}</span>
+                  )}
+                </span>
+              </div>
+              
+              {isCreator && player !== username && (
+                <button
+                  onClick={() => onRemovePlayer(player)}
+                  className="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition duration-200"
+                >
+                  <span className="hidden sm:inline">Remove</span>
+                  <span className="sm:hidden">X</span>
+                </button>
+              )}
+            </li>
+          );
+        })}
       </ul>
       
       {players.length < 4 && (
@@ -193,19 +252,28 @@ function PlayerList({ players, isCreator, onRemovePlayer }) {
 function GameRoom() {
   // Get roomName from URL params
   const { roomName: roomNameParam } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const roomName = decodeRoomNameFromPath(roomNameParam || "");
+  const attemptedInviteJoinRef = useRef("");
   
   // Get shared state from App component
   const { 
     players, 
+    playerDetails,
+    rooms,
+    lobbyControlsData,
     gameStarted, 
     isCreator, 
     startGame, 
+    joinRoomFromInvite,
     leaveRoom, 
-    addAI, 
-    removePlayer, 
-    gameState, 
-    socket
+    addAI,
+    removePlayer,
+    gameState,
+    turnTimer,
+    socket,
+    addToast
   } = useOutletContext();
 
   useEffect(() => {
@@ -214,32 +282,65 @@ function GameRoom() {
     }
   }, [roomName]);
 
+  useEffect(() => {
+    if (!roomName || !socket.connected || !lobbyControlsData.username) return;
+    if (players.includes(lobbyControlsData.username)) return;
+
+    const listedRoom = rooms.find((room) => room.name === roomName);
+    if (listedRoom?.rated && !user) {
+      addToast?.("Log in to join ranked rooms.", "warning");
+      navigate("/");
+      return;
+    }
+    if (listedRoom?.status === "playing") return;
+
+    const joinKey = `${roomName}:${lobbyControlsData.username}`;
+    if (attemptedInviteJoinRef.current === joinKey) return;
+
+    attemptedInviteJoinRef.current = joinKey;
+    joinRoomFromInvite(roomName);
+  }, [
+    addToast,
+    joinRoomFromInvite,
+    lobbyControlsData.username,
+    navigate,
+    players,
+    roomName,
+    rooms,
+    socket.connected,
+    user,
+  ]);
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white pt-6 px-4">
-      <div className="container mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-400">Big 2 Live</h1>
-          <p className="text-gray-400">Room: <span className="font-medium text-white">{roomName}</span></p>
-        </header>
-        
-        <main>
-          {gameStarted ? (
-            <GameDisplay 
-              gameState={gameState}
-              socket={socket}
-            />
-          ) : (
-            <PreStartDisplay
-              players={players}
-              isCreator={isCreator}
-              onGameStart={startGame}
-              onRoomLeave={leaveRoom}
-              onAddAI={addAI}
-              onRemovePlayer={removePlayer}
-            />
-          )}
-        </main>
-      </div>
+    <div className="w-full">
+      <header className="text-center mb-6">
+        <p className="text-gray-400">
+          Room: <span className="font-medium text-white">{roomName}</span>
+        </p>
+      </header>
+
+      {gameStarted ? (
+        <GameDisplay gameState={gameState} turnTimer={turnTimer} socket={socket} />
+      ) : (
+        <PreStartDisplay
+          players={players}
+          playerDetails={playerDetails}
+          isCreator={isCreator}
+          onGameStart={startGame}
+          onRoomLeave={leaveRoom}
+          onAddAI={addAI}
+          onRemovePlayer={removePlayer}
+          onCopyInvite={async () => {
+            const link = `${window.location.origin}/room/${encodeRoomNameForPath(roomName)}`;
+            try {
+              await copyTextToClipboard(link);
+              addToast?.("Invite link copied to clipboard!", "success");
+            } catch {
+              addToast?.("Could not copy link.", "error");
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

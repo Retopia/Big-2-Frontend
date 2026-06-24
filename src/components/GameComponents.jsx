@@ -1,5 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { normalizeNameInput } from "../utils/nameValidation";
+
+// Live countdown for the current player's turn. Ticks locally off the deadline
+// the server sent (already adjusted for clock skew in App.jsx).
+function TurnCountdown({ turnTimer, isYourTurn }) {
+  const [remaining, setRemaining] = useState(null);
+
+  useEffect(() => {
+    if (!turnTimer?.deadline) {
+      setRemaining(null);
+      return undefined;
+    }
+
+    const tick = () =>
+      setRemaining(Math.max(0, Math.round((turnTimer.deadline - Date.now()) / 1000)));
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [turnTimer]);
+
+  if (remaining == null) return null;
+
+  const low = remaining <= 15;
+
+  return (
+    <span
+      className={`text-xs px-2 py-1 rounded font-semibold ${
+        low ? "bg-red-600 text-white animate-pulse" : "bg-gray-700 text-gray-200"
+      }`}
+    >
+      {isYourTurn ? `${remaining}s to play` : `${remaining}s`}
+    </span>
+  );
+}
 
 const getCardValue = (card) => {
   let value;
@@ -204,7 +238,7 @@ function OpponentHand({ playerName, cardCount, isActive }) {
 }
 
 //   represents the play area where cards are placed
-function Table({ lastPlayedHand, currentTurn, lastPlayedBy }) {
+function Table({ lastPlayedHand, currentTurn, lastPlayedBy, turnTimer }) {
   const username = localStorage.getItem("username");
   const isYourTurn = currentTurn === username;
 
@@ -220,11 +254,14 @@ function Table({ lastPlayedHand, currentTurn, lastPlayedBy }) {
             {(currentTurn || "—")}&apos;s Turn
           </span>
         </h2>
-        {isYourTurn && (
+        <div className="flex items-center gap-2">
+          <TurnCountdown turnTimer={turnTimer} isYourTurn={isYourTurn} />
+          {isYourTurn && (
             <span className="text-xs bg-yellow-500 text-gray-900 px-2 py-1 rounded font-semibold animate-pulse">
               YOUR TURN
             </span>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="min-h-32 flex flex-col justify-center items-center p-3 bg-gray-700 rounded-lg">
@@ -250,7 +287,7 @@ function Table({ lastPlayedHand, currentTurn, lastPlayedBy }) {
 }
 
 // Now update the GameDisplay component to use all these pieces
-function GameDisplay({ gameState, socket }) {
+function GameDisplay({ gameState, socket, turnTimer }) {
   const [selectedCards, setSelectedCards] = useState([]);
   const [sortBySuit, setSortBySuit] = useState(false);
   const username = localStorage.getItem("username");
@@ -346,7 +383,7 @@ function GameDisplay({ gameState, socket }) {
 
       <div className="space-y-1">
         {/* Render opponent hands */}
-        {gameState.players
+        {(gameState.players || [])
           .filter((p) => p.name !== username)
           .map((player, index) => (
             <OpponentHand
@@ -362,6 +399,7 @@ function GameDisplay({ gameState, socket }) {
         lastPlayedHand={gameState.lastPlayedHand || []}
         currentTurn={gameState.currentPlayer || ""}
         lastPlayedBy={gameState.lastPlayedBy || null}
+        turnTimer={turnTimer}
       />
 
       <div className="mt-6">

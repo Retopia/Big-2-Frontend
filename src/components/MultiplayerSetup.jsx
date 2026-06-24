@@ -1,12 +1,15 @@
+import { useEffect } from "react";
 import { useOutletContext } from "react-router";
 import RoomList from "./RoomList";
 import BackButton from "./BackButton";
+import { useAuth } from "../context/useAuth";
 import {
   PLAYER_NAME_MAX_LENGTH,
   ROOM_NAME_MAX_LENGTH,
 } from "../utils/nameValidation";
 
 const MultiplayerSetup = () => {
+  const { user } = useAuth();
   const {
     rooms,
     lobbyControlsData,
@@ -14,19 +17,35 @@ const MultiplayerSetup = () => {
     joinRoom
   } = useOutletContext();
 
+  useEffect(() => {
+    if (!user && lobbyControlsData.ranked) {
+      setLobbyControlsData({ ...lobbyControlsData, ranked: false });
+    }
+  }, [lobbyControlsData, setLobbyControlsData, user]);
+
   const handleQuickJoin = () => {
     // Find an available room or create a new one
     const availableRooms = rooms.filter(room =>
-      room.status === "waiting" && room.players.length < 4
+      room.status === "waiting" &&
+      room.players.length < 4 &&
+      Boolean(room.rated) === Boolean(lobbyControlsData.ranked)
     );
 
     if (availableRooms.length > 0) {
       // Join a random available room
       const randomRoom = availableRooms[Math.floor(Math.random() * availableRooms.length)];
-      joinRoom({ roomName: randomRoom.name, username: lobbyControlsData.username });
+      joinRoom({
+        roomName: randomRoom.name,
+        username: lobbyControlsData.username,
+        ranked: Boolean(randomRoom.rated),
+      });
     } else {
       // Create a new quick room
-      joinRoom({ roomName: `Quick-${Math.floor(Math.random() * 1000)}`, username: lobbyControlsData.username });
+      joinRoom({
+        roomName: `Quick-${Math.floor(Math.random() * 1000)}`,
+        username: lobbyControlsData.username,
+        ranked: Boolean(lobbyControlsData.ranked),
+      });
     }
   };
 
@@ -38,7 +57,7 @@ const MultiplayerSetup = () => {
           {/* Small screens: stacked */}
           <div className="flex flex-col items-start sm:hidden space-y-2">
             <BackButton to="/" label="Back" />
-            <h2 className="text-2xl font-semibold text-blue-400">Play with AI</h2>
+            <h2 className="text-2xl font-semibold text-blue-400">Play with Friends</h2>
           </div>
 
           {/* Medium+ screens: overlay */}
@@ -83,6 +102,25 @@ const MultiplayerSetup = () => {
             />
           </div>
 
+          <label className="flex items-center justify-between rounded bg-gray-700 px-4 py-3 text-sm text-gray-200">
+            <span>
+              Ranked ELO game
+              {!user && <span className="ml-2 text-gray-400">(login required)</span>}
+            </span>
+            <input
+              type="checkbox"
+              checked={Boolean(lobbyControlsData.ranked)}
+              disabled={!user}
+              onChange={(e) =>
+                setLobbyControlsData({
+                  ...lobbyControlsData,
+                  ranked: e.target.checked,
+                })
+              }
+              className="h-4 w-4 accent-blue-600"
+            />
+          </label>
+
           <button
             onClick={() => joinRoom(lobbyControlsData)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition duration-200 transform hover:translate-y-px focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -109,6 +147,7 @@ const MultiplayerSetup = () => {
               rooms={rooms}
               onRoomJoin={joinRoom}
               formData={lobbyControlsData}
+              isAuthed={Boolean(user)}
             />
           </div>
         </div>
