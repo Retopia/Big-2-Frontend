@@ -128,11 +128,26 @@ function App() {
       setCreatorID(data.creatorID);
     });
 
-    socket.on("forceLeave", () => {
-      addToast("You have been removed from the room.", "error");
+    socket.on("forceLeave", (data) => {
+      addToast(data?.message || "You have been removed from the room.", "error");
       setInRoom(false);
       setTurnTimer(null);
       navigate("/");
+    });
+
+    // A game ended early because someone left/timed out. Stay in the room but drop
+    // back to the pre-start lobby and surface who left.
+    socket.on("gameAborted", (data) => {
+      addToast(data?.message || "The game was aborted.", "warning", 5000);
+      setGameStarted(false);
+      setTurnTimer(null);
+      setGameState({
+        hand: [],
+        lastPlayedHand: [],
+        currentPlayer: "",
+        players: [],
+        round: 1,
+      });
     });
 
     socket.on("roomList", (data) => setRooms(data.rooms || []));
@@ -201,6 +216,7 @@ function App() {
       socket.off("joinError");
       socket.off("joinAIGameError");
       socket.off("forceLeave");
+      socket.off("gameAborted");
       socket.off("gameStateUpdate");
       socket.off("turnTimer");
       socket.off("turnTimerCleared");

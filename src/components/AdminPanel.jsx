@@ -62,6 +62,9 @@ function AdminPanel() {
   const [password, setPassword] = useState("");
   const [rooms, setRooms] = useState([]);
   const [players, setPlayers] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [usersAvailable, setUsersAvailable] = useState(true);
+  const [userSearch, setUserSearch] = useState("");
   const [aiConfig, setAiConfig] = useState({
     llmModel: "",
     defaultLlmModel: "",
@@ -84,6 +87,15 @@ function AdminPanel() {
     () => rooms.filter((room) => room.status === "playing").length,
     [rooms]
   );
+  const filteredUsers = useMemo(() => {
+    const query = userSearch.trim().toLowerCase();
+    if (!query) return users;
+    return users.filter(
+      (user) =>
+        user.username.toLowerCase().includes(query) ||
+        (user.email || "").toLowerCase().includes(query)
+    );
+  }, [users, userSearch]);
 
   function resetMessages() {
     setErrorMessage("");
@@ -138,6 +150,48 @@ function AdminPanel() {
     } finally {
       setLoading(false);
     }
+
+    // Accounts require Postgres — load separately so the rest of the dashboard
+    // (all in-memory) still works when no database is configured.
+    loadUsers();
+  }
+
+  async function loadUsers() {
+    try {
+      const data = await apiRequest("/admin/api/users");
+      setUsers(data.users || []);
+      setUsersAvailable(true);
+    } catch (error) {
+      if (error?.message === "Unauthorized.") {
+        clearStoredAdminToken();
+        setAuthenticated(false);
+        return;
+      }
+      // Database not configured (503) or transient error — hide the section.
+      setUsersAvailable(false);
+    }
+  }
+
+  async function handleDeleteUser(user) {
+    resetMessages();
+    if (
+      !window.confirm(
+        `Permanently delete account "${user.username}"?\n\nThis cannot be undone. They will be logged out and removed from the leaderboard, and their username/email will be freed for reuse. Past match history is preserved under the name they played as.`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await apiRequest(`/admin/api/users/${user.id}/delete`, { method: "POST" });
+      setSuccessMessage(`Deleted account: ${user.username}`);
+      await loadUsers();
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleLogin(event) {
@@ -175,6 +229,7 @@ function AdminPanel() {
       setAuthenticated(false);
       setRooms([]);
       setPlayers([]);
+      setUsers([]);
       setAnnouncement(null);
       setSuccessMessage("Logged out.");
     } catch (error) {
@@ -537,6 +592,62 @@ function AdminPanel() {
                       </td>
                       <td className="py-2 pr-3 text-gray-300">
                         {player.isAI ? `AI (${player.difficulty || "standard"})` : "Human"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl font-semibold text-blue-300">User Accounts</h2>
+            <input
+              type="text"
+              value={userSearch}
+              onChange={(event) => setUserSearch(event.target.value)}
+              placeholder="Search username or email..."
+              className="px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {!usersAvailable ? (
+            <p className="text-gray-400">
+              Account management requires a configured database (DATABASE_URL).
+            </p>
+          ) : filteredUsers.length === 0 ? (
+            <p className="text-gray-400">
+              {users.length === 0 ? "No registered accounts." : "No accounts match your search."}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="text-gray-300 border-b border-gray-700">
+                    <th className="py-2 pr-3">Username</th>
+                    <th className="py-2 pr-3">Email</th>
+                    <th className="py-2 pr-3 text-right">ELO</th>
+                    <th className="py-2 pr-3 text-right">Games</th>
+                    <th className="py-2 pr-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="border-b border-gray-700/50">
+                      <td className="py-2 pr-3 text-white">{user.username}</td>
+                      <td className="py-2 pr-3 text-gray-300">{user.email}</td>
+                      <td className="py-2 pr-3 text-right text-blue-300">{user.rating}</td>
+                      <td className="py-2 pr-3 text-right text-gray-300">{user.gamesPlayed}</td>
+                      <td className="py-2 pr-3 text-right">
+                        <button
+                          onClick={() => handleDeleteUser(user)}
+                          disabled={loading}
+                          className="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded transition disabled:opacity-60"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
