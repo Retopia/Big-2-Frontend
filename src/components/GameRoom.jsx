@@ -292,7 +292,12 @@ function GameRoom() {
       navigate("/");
       return;
     }
-    if (listedRoom?.status === "playing") return;
+    // Note: we intentionally do NOT short-circuit on a "playing" room here. Whether
+    // this client is allowed in is the server's call — an existing participant
+    // refreshing mid-game must be let back in, while a true outsider is rejected
+    // with a joinError that redirects them to the room browser. Deciding on the
+    // client would wrongly bounce a reconnecting player during the roomList/
+    // roomUpdate race.
 
     const joinKey = `${roomName}:${lobbyControlsData.username}`;
     if (attemptedInviteJoinRef.current === joinKey) return;
