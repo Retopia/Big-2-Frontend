@@ -1,5 +1,3 @@
-// components/ToastContainer.jsx
-import React from 'react';
 import { Toast } from './Toast';
 
 export const ToastContainer = ({ toasts, removeToast }) => {

@@ -88,7 +88,7 @@ const GameRules = () => {
               <ol className="list-decimal pl-5 space-y-1 text-gray-300">
                 <li>Create a room or join an existing one</li>
                 <li>Wait for other players or add AI opponents</li>
-                <li>When it's your turn, select valid cards and click "Play"</li>
+                <li>When it&apos;s your turn, select valid cards and click &quot;Play&quot;</li>
                 <li>Try to be the first to play all your cards!</li>
               </ol>
             </div>
@@ -120,7 +120,7 @@ const GameRules = () => {
 
               <div className="bg-gray-700 p-4 rounded">
                 <h4 className="font-medium text-blue-300 mb-2">Straight</h4>
-                <p className="text-gray-300">Five cards in sequence (suits don't matter).</p>
+                <p className="text-gray-300">Five cards in sequence (suits don&apos;t matter).</p>
                 <p className="text-sm text-gray-400 mt-2">Example: 3-4-5-6-7 (compared by highest card)</p>
               </div>
 
@@ -173,7 +173,7 @@ const GameRules = () => {
 
               <div className="bg-gray-700 p-4 rounded">
                 <h4 className="font-medium text-yellow-400 mb-2">Break Up Weak Combinations</h4>
-                <p className="text-gray-300">Sometimes it's better to break up a weak flush or straight to retain control with singles or pairs.</p>
+                  <p className="text-gray-300">Sometimes it&apos;s better to break up a weak flush or straight to retain control with singles or pairs.</p>
               </div>
             </div>
           </div>
@@ -185,7 +185,7 @@ const GameRules = () => {
 
             <div className="space-y-4">
               <div className="bg-gray-700 p-4 rounded">
-                <p className="font-medium text-yellow-400 mb-1">What if I can't beat the last combination played?</p>
+                <p className="font-medium text-yellow-400 mb-1">What if I can&apos;t beat the last combination played?</p>
                 <p className="text-gray-300">You must pass your turn. If all players pass, the last player who played a combination starts a new round.</p>
               </div>
 
@@ -195,7 +195,7 @@ const GameRules = () => {
               </div>
 
               <div className="bg-gray-700 p-4 rounded">
-                <p className="font-medium text-yellow-400 mb-1">What if I'm the first to play in a round?</p>
+                <p className="font-medium text-yellow-400 mb-1">What if I&apos;m the first to play in a round?</p>
                 <p className="text-gray-300">You can play any valid combination you want, and the next players must follow that combination type.</p>
               </div>
 
