@@ -79,6 +79,7 @@ const GameRules = () => {
               <li>Suit rankings (from low to high): ♦ Diamonds, ♣ Clubs, ♥ Hearts, ♠ Spades.</li>
               <li>Player with the 3 of Diamonds starts the first round.</li>
               <li>Players must play a higher-ranked combination than the previous player or pass.</li>
+              <li>Four of a kind and straight flushes are bombs and may be played over any non-bomb hand.</li>
               <li>When all other players pass, the last player who played starts a new round.</li>
               <li>The first player to get rid of all their cards wins!</li>
             </ul>
@@ -138,13 +139,13 @@ const GameRules = () => {
 
               <div className="bg-gray-700 p-4 rounded">
                 <h4 className="font-medium text-blue-300 mb-2">Four of a Kind</h4>
-                <p className="text-gray-300">Four cards of the same rank plus any card.</p>
+                <p className="text-gray-300">Four cards of the same rank plus any card. This is a bomb and beats any non-bomb hand.</p>
                 <p className="text-sm text-gray-400 mt-2">Example: 9-9-9-9-3 beats 8-8-8-8-A</p>
               </div>
 
               <div className="bg-gray-700 p-4 rounded">
                 <h4 className="font-medium text-blue-300 mb-2">Straight Flush</h4>
-                <p className="text-gray-300">Five cards in sequence of the same suit.</p>
+                <p className="text-gray-300">Five cards in sequence of the same suit. This is a bomb and beats four of a kind or any non-bomb hand.</p>
                 <p className="text-sm text-gray-400 mt-2">Example: 4♥5♥6♥7♥8♥ beats 3♠4♠5♠6♠7♠</p>
               </div>
             </div>
