@@ -5,16 +5,21 @@ export default function Contact() {
   const [copied, setCopied] = useState(false);
   const email = "prestonltang@nyu.edu";
 
-  const copyEmail = () => {
-    navigator.clipboard.writeText(email);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyEmail = async () => {
+    if (!navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable (e.g. denied permission) — the address is shown below.
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white py-8">
       <div className="container mx-auto px-4 max-w-2xl">
-        <BackButton onClick={() => console.log("Navigate back")} />
+        <BackButton to="/" label="Back" />
 
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-400 mb-2">Contact</h1>
