@@ -1,4 +1,3 @@
-// components/ToastContainer.jsx
 import { Toast } from './Toast';
 
 export const ToastContainer = ({ toasts, removeToast }) => {
