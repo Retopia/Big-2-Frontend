@@ -3,8 +3,12 @@ import { Link } from "react-router";
 import { API_BASE_URL } from "../config";
 import BackButton from "./BackButton";
 
+const PAGE_SIZE = 50;
+
 export default function Leaderboard() {
   const [rows, setRows] = useState([]);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -16,14 +20,17 @@ export default function Leaderboard() {
       setError("");
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/leaderboard?limit=50`);
+        const response = await fetch(`${API_BASE_URL}/api/leaderboard?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`);
         const data = await response.json().catch(() => null);
 
         if (!response.ok) {
           throw new Error(data?.message || "Unable to load leaderboard.");
         }
 
-        if (!cancelled) setRows(data?.leaderboard || []);
+        if (!cancelled) {
+          setRows(data?.leaderboard || []);
+          setTotal(data?.total || 0);
+        }
       } catch (loadError) {
         if (!cancelled) setError(loadError.message);
       } finally {
@@ -36,7 +43,9 @@ export default function Leaderboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page]);
+
+  const totalPages = Math.max(Math.ceil(total / PAGE_SIZE), 1);
 
   return (
     <div className="mx-auto w-full max-w-4xl py-10">
@@ -99,6 +108,30 @@ export default function Leaderboard() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm text-gray-300">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(p - 1, 0))}
+            disabled={page === 0 || loading}
+            className="rounded bg-gray-700 px-4 py-2 hover:bg-gray-600 disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span>
+            Page {page + 1} of {totalPages} ({total} players)
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            disabled={page >= totalPages - 1 || loading}
+            className="rounded bg-gray-700 px-4 py-2 hover:bg-gray-600 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
